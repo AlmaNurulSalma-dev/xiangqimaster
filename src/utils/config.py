@@ -94,5 +94,10 @@ PIECE_VALUES: dict[int, float] = {
 MAX_PLIES: int = 300              # move limit → draw
 REPETITION_LIMIT: int = 3        # same position 3 times → draw
 
+# ─── Rewards, from the mover's perspective (docs/03-ENVIRONMENT.md 4.1) ─────
+WIN_REWARD: float = 1.0
+LOSS_REWARD: float = -1.0
+DRAW_REWARD: float = 0.1         # small positive: draws are rare in Xiangqi
+
 # ─── Reproducibility ──────────────────────────────────────────────────────
 DEFAULT_SEED: int = 42
