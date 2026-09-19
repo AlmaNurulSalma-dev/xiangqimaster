@@ -1,0 +1,14 @@
+# XiangqiMaster — conda environment
+# Create:  conda env create -f environment.yml
+# Activate: conda activate xiangqimaster
+#
+# For GPU, install the matching CUDA-enabled torch build afterwards per
+# https://pytorch.org/get-started/locally/ (the pip torch below is CPU/default).
+name: xiangqimaster
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip>=23
+  - pip:
+      - -r requirements.txt

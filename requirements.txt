@@ -1,0 +1,41 @@
+# XiangqiMaster — Python dependencies (Python 3.10+)
+# Install:  pip install -r requirements.txt
+# Note: install the correct torch build for your CUDA version — see
+#       https://pytorch.org/get-started/locally/
+
+# ─── Deep learning ────────────────────────────────────────
+torch>=2.0
+torchvision>=0.15
+
+# ─── Reinforcement learning ───────────────────────────────
+gymnasium>=0.29
+stable-baselines3>=2.2        # PPO
+sb3-contrib>=2.2              # MaskablePPO (mandatory action masking)
+
+# ─── Numerics / data ──────────────────────────────────────
+numpy>=1.24
+pandas>=2.0
+scipy>=1.10
+
+# ─── Experiment tracking ──────────────────────────────────
+wandb>=0.16
+tensorboard>=2.14
+
+# ─── Visualization / dashboard ────────────────────────────
+matplotlib>=3.7
+plotly>=5.18
+streamlit>=1.30
+
+# ─── Utilities ────────────────────────────────────────────
+pyyaml>=6.0                   # config files
+tqdm>=4.66                    # progress bars
+python-dotenv>=1.0           # .env loading
+
+# ─── Testing / quality ────────────────────────────────────
+pytest>=7.4
+ruff>=0.1                     # linting + formatting
+
+# ─── Optional: reference environment for cross-checking move
+#     legality only (built on legacy Gym — do NOT use as the main
+#     env; see docs/03-ENVIRONMENT.md §8). Uncomment if needed:
+# gym-xiangqi
