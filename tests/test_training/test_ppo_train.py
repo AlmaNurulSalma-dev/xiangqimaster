@@ -7,10 +7,13 @@ that the agent becomes strong (that needs hundreds of thousands of steps).
 
 from __future__ import annotations
 
+import torch
+
 from src.agents.ppo_agent import PPOAgent
 from src.environment import action_space
 from src.environment.board import Board
 from src.environment.move_generator import generate_legal_moves
+from src.models.network import PolicyValueNetwork
 from src.training.ppo_train import build_model, train
 
 
@@ -38,3 +41,16 @@ def test_tiny_training_run_completes():
     board = Board()
     action = agent.select_move(board)
     assert action_space.index_to_move(action) in set(generate_legal_moves(board))
+
+
+def test_transfer_il_weights_copies_the_body():
+    # Agent 2 Phase 2: the IL body must land in the PPO features extractor.
+    il = PolicyValueNetwork(channels=8, num_blocks=1)
+    model = build_model(
+        channels=8, num_blocks=1, n_steps=64, batch_size=32, seed=0, il_network=il
+    )
+    extractor = model.policy.features_extractor
+    assert torch.allclose(
+        extractor.input_conv.conv.weight.detach(),
+        il.input_conv.conv.weight.detach(),
+    )

@@ -19,6 +19,7 @@ import argparse
 
 from sb3_contrib import MaskablePPO
 
+from src.models.network import PolicyValueNetwork
 from src.models.sb3_extractor import XiangqiResNetExtractor
 from src.training.self_play_env import SelfPlayEnv
 from src.utils.config import (
@@ -38,6 +39,26 @@ from src.utils.config import (
 )
 
 
+def transfer_il_weights(
+    model: MaskablePPO, il_network: PolicyValueNetwork
+) -> None:
+    """Copy an IL-trained network's body into the PPO features extractor.
+
+    This is the Agent 2 Phase 2 initialization: PPO fine-tuning starts from the
+    imitation-learning representation instead of random weights. Only the shared
+    body transfers — the input convolution and residual tower, which have the
+    same architecture in both — while SB3's policy/value heads stay fresh.
+    """
+    policy = model.policy
+    seen: set[int] = set()
+    for attr in ("features_extractor", "pi_features_extractor", "vf_features_extractor"):
+        extractor = getattr(policy, attr, None)
+        if isinstance(extractor, XiangqiResNetExtractor) and id(extractor) not in seen:
+            seen.add(id(extractor))
+            extractor.input_conv.load_state_dict(il_network.input_conv.state_dict())
+            extractor.tower.load_state_dict(il_network.residual_tower.state_dict())
+
+
 def build_model(
     env: SelfPlayEnv | None = None,
     *,
@@ -47,8 +68,13 @@ def build_model(
     batch_size: int = PPO_BATCH_SIZE,
     seed: int | None = None,
     verbose: int = 0,
+    il_network: PolicyValueNetwork | None = None,
 ) -> MaskablePPO:
-    """Construct a MaskablePPO model on a SelfPlayEnv using our ResNet body."""
+    """Construct a MaskablePPO model on a SelfPlayEnv using our ResNet body.
+
+    If ``il_network`` is given, its body is transferred into the extractor
+    (Agent 2 Phase 2). Its ``channels``/``num_blocks`` must match this model's.
+    """
     if env is None:
         env = SelfPlayEnv()
     policy_kwargs = dict(
@@ -59,7 +85,7 @@ def build_model(
             features_dim=PPO_FEATURES_DIM,
         ),
     )
-    return MaskablePPO(
+    model = MaskablePPO(
         policy="MlpPolicy",  # MaskableActorCriticPolicy + our custom extractor
         env=env,
         learning_rate=PPO_LEARNING_RATE,
@@ -76,6 +102,9 @@ def build_model(
         seed=seed,
         verbose=verbose,
     )
+    if il_network is not None:
+        transfer_il_weights(model, il_network)
+    return model
 
 
 def train(
