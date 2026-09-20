@@ -109,6 +109,11 @@ NN_L2_WEIGHT_DECAY: float = 1e-4  # weight decay used by the optimizer
 # ─── Minimax baseline (docs/06-AGENTS.md section 2) ────────────────────────
 MINIMAX_DEPTH: int = 4            # search depth in plies (deeper = stronger, slower)
 
+# ─── Imitation learning (docs/07-TRAINING.md section 2.3) ──────────────────
+IL_LEARNING_RATE: float = 1e-3
+IL_EPOCHS: int = 30
+IL_BATCH_SIZE: int = 512
+
 # ─── PPO self-play (docs/07-TRAINING.md section 3.4) ───────────────────────
 PPO_LEARNING_RATE: float = 3e-4
 PPO_N_STEPS: int = 2048          # steps collected per policy update
