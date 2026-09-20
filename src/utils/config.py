@@ -106,5 +106,8 @@ NN_POLICY_HEAD_CHANNELS: int = 2  # 1x1 conv channels in the policy head
 NN_VALUE_HEAD_HIDDEN: int = 256  # hidden units in the value head (128–512)
 NN_L2_WEIGHT_DECAY: float = 1e-4  # weight decay used by the optimizer
 
+# ─── Minimax baseline (docs/06-AGENTS.md section 2) ────────────────────────
+MINIMAX_DEPTH: int = 4            # search depth in plies (deeper = stronger, slower)
+
 # ─── Reproducibility ──────────────────────────────────────────────────────
 DEFAULT_SEED: int = 42
