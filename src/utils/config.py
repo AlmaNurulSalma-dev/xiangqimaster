@@ -109,6 +109,12 @@ NN_L2_WEIGHT_DECAY: float = 1e-4  # weight decay used by the optimizer
 # ─── Minimax baseline (docs/06-AGENTS.md section 2) ────────────────────────
 MINIMAX_DEPTH: int = 4            # search depth in plies (deeper = stronger, slower)
 
+# ─── MCTS (Agent 3, docs/06-AGENTS.md section 5.6) ─────────────────────────
+MCTS_SIMULATIONS: int = 400        # simulations per move (Experiment 5 studies this)
+MCTS_C_PUCT: float = 1.5           # exploration constant in the PUCT formula
+MCTS_DIRICHLET_ALPHA: float = 0.3  # root exploration noise (training self-play)
+MCTS_DIRICHLET_EPSILON: float = 0.25
+
 # ─── Imitation learning (docs/07-TRAINING.md section 2.3) ──────────────────
 IL_LEARNING_RATE: float = 1e-3
 IL_EPOCHS: int = 30
