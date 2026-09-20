@@ -109,5 +109,18 @@ NN_L2_WEIGHT_DECAY: float = 1e-4  # weight decay used by the optimizer
 # ─── Minimax baseline (docs/06-AGENTS.md section 2) ────────────────────────
 MINIMAX_DEPTH: int = 4            # search depth in plies (deeper = stronger, slower)
 
+# ─── PPO self-play (docs/07-TRAINING.md section 3.4) ───────────────────────
+PPO_LEARNING_RATE: float = 3e-4
+PPO_N_STEPS: int = 2048          # steps collected per policy update
+PPO_BATCH_SIZE: int = 512
+PPO_N_EPOCHS: int = 4            # passes over the collected data per update
+PPO_CLIP_RANGE: float = 0.2     # PPO clipping epsilon
+PPO_GAMMA: float = 0.99         # discount factor
+PPO_GAE_LAMBDA: float = 0.95    # GAE smoothing
+PPO_ENT_COEF: float = 0.01      # entropy bonus (exploration)
+PPO_VF_COEF: float = 0.5        # value loss coefficient
+PPO_MAX_GRAD_NORM: float = 0.5  # gradient clipping
+PPO_FEATURES_DIM: int = 256     # ResNet extractor output size fed to SB3 heads
+
 # ─── Reproducibility ──────────────────────────────────────────────────────
 DEFAULT_SEED: int = 42
