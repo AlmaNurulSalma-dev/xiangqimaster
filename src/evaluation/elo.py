@@ -16,6 +16,7 @@ Functions here are pure math with no game logic, so they are trivial to test:
 from __future__ import annotations
 
 import math
+from collections import defaultdict
 
 #: Standard Elo scale constant (a 400-point gap ⇒ 10x expected-score ratio).
 ELO_SCALE: float = 400.0
@@ -72,6 +73,55 @@ def elo_confidence_interval(
     return z * se_elo
 
 
+def fit_ratings(
+    pairwise: list[tuple[str, str, float, int]],
+    *,
+    anchor_mean: float = 1500.0,
+    k: float = 16.0,
+    iterations: int = 3000,
+) -> dict[str, float]:
+    """Fit Elo ratings to round-robin results (Approach B, docs/08 section 3.2).
+
+    Args:
+        pairwise: list of ``(name_a, name_b, score_a, n_games)`` where
+            ``score_a`` is agent A's average score (1 win, 0.5 draw, 0 loss)
+            over ``n_games`` against B.
+        anchor_mean: the fitted ratings are recentred so their mean equals this.
+        k, iterations: step size and iteration count for the fit.
+
+    Returns:
+        A mapping of agent name → fitted rating. Because the scale is only
+        relative, ratings are recentred on ``anchor_mean``; a fixed-rating
+        opponent (e.g. ElephantEye) can be used to anchor absolutely instead.
+    """
+    games: dict[str, list[tuple[str, float, int]]] = defaultdict(list)
+    for name_a, name_b, score_a, n in pairwise:
+        games[name_a].append((name_b, score_a, n))
+        games[name_b].append((name_a, 1.0 - score_a, n))
+
+    ratings: dict[str, float] = {name: anchor_mean for name in games}
+    for _ in range(iterations):
+        updated = dict(ratings)
+        for name, results in games.items():
+            expected_total = 0.0
+            actual_total = 0.0
+            total_games = 0
+            for opponent, score, n in results:
+                expected_total += n * expected_score(ratings[name], ratings[opponent])
+                actual_total += n * score
+                total_games += n
+            if total_games:
+                updated[name] = ratings[name] + k * (
+                    actual_total - expected_total
+                ) / total_games
+        ratings = updated
+
+    if ratings:
+        shift = anchor_mean - sum(ratings.values()) / len(ratings)
+        ratings = {name: r + shift for name, r in ratings.items()}
+    return ratings
+
+
 __all__ = [
     "ELO_SCALE",
     "DEFAULT_K",
@@ -79,4 +129,5 @@ __all__ = [
     "update_rating",
     "estimate_rating_from_score",
     "elo_confidence_interval",
+    "fit_ratings",
 ]

@@ -51,3 +51,19 @@ def test_confidence_interval_around_400_games():
     # docs/08: ~400 games ⇒ roughly ±40-50 Elo at a 50% score.
     ci = elo.elo_confidence_interval(0.5, 400)
     assert 30 < ci < 60
+
+
+def test_fit_ratings_orders_a_transitive_field():
+    # A beats B beats C beats D; fitted ratings must respect that order.
+    pairwise = [
+        ("A", "B", 0.75, 100),
+        ("B", "C", 0.75, 100),
+        ("C", "D", 0.75, 100),
+        ("A", "C", 0.90, 100),
+        ("A", "D", 0.97, 100),
+        ("B", "D", 0.90, 100),
+    ]
+    ratings = elo.fit_ratings(pairwise, anchor_mean=1500.0)
+    assert ratings["A"] > ratings["B"] > ratings["C"] > ratings["D"]
+    # Recentred on the anchor mean.
+    assert abs(sum(ratings.values()) / len(ratings) - 1500.0) < 1e-6
