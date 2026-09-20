@@ -99,5 +99,12 @@ WIN_REWARD: float = 1.0
 LOSS_REWARD: float = -1.0
 DRAW_REWARD: float = 0.1         # small positive: draws are rare in Xiangqi
 
+# ─── Neural network architecture (docs/05-NEURAL-NETWORK.md section 9) ─────
+NN_CHANNEL_WIDTH: int = 64        # C: body channel width (64/128/256)
+NN_NUM_RES_BLOCKS: int = 10      # N: residual blocks (6 fast … 19 strong)
+NN_POLICY_HEAD_CHANNELS: int = 2  # 1x1 conv channels in the policy head
+NN_VALUE_HEAD_HIDDEN: int = 256  # hidden units in the value head (128–512)
+NN_L2_WEIGHT_DECAY: float = 1e-4  # weight decay used by the optimizer
+
 # ─── Reproducibility ──────────────────────────────────────────────────────
 DEFAULT_SEED: int = 42
