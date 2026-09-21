@@ -45,6 +45,16 @@ def test_find_raw_files_missing_dir_raises():
         find_raw_files("does/not/exist")
 
 
+def test_find_raw_files_descends_into_subfolders(tmp_path):
+    # The scraper nests games in a per-player subfolder; the scan must recurse.
+    sub = tmp_path / "XuYinchuan_game_records_2024"
+    sub.mkdir()
+    (sub / "g1.pgn").write_text("x", encoding="utf-8")
+    (tmp_path / "top.txt").write_text("x", encoding="utf-8")
+    names = sorted(f.replace("\\", "/").rsplit("/", 1)[-1] for f in find_raw_files(str(tmp_path)))
+    assert names == ["g1.pgn", "top.txt"]
+
+
 def test_records_from_file_dispatches_by_extension(tmp_path):
     (tmp_path / "g.txt").write_text(f"red {WXF_GAME}\n", encoding="utf-8")
     (tmp_path / "g.pgn").write_text(

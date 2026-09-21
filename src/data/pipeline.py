@@ -74,14 +74,20 @@ def _records_from_text(text: str) -> list[tuple[str, list[str]]]:
 
 
 def find_raw_files(raw_dir: str) -> list[str]:
-    """Return supported raw game files under ``raw_dir``, sorted for determinism."""
+    """Return supported raw game files under ``raw_dir``, recursively.
+
+    The scan descends into subdirectories so the per-player subfolders the dpxq
+    scraper creates (``<name>_game_records_<date>/*.pgn``) are picked up. Paths
+    are sorted for a deterministic (reproducible) downstream split.
+    """
     if not os.path.isdir(raw_dir):
         raise FileNotFoundError(f"raw data directory not found: {raw_dir}")
     found: list[str] = []
-    for name in sorted(os.listdir(raw_dir)):
-        if name.lower().endswith(RAW_EXTENSIONS):
-            found.append(os.path.join(raw_dir, name))
-    return found
+    for root, _dirs, names in os.walk(raw_dir):
+        for name in names:
+            if name.lower().endswith(RAW_EXTENSIONS):
+                found.append(os.path.join(root, name))
+    return sorted(found)
 
 
 def records_from_file(path: str) -> list[tuple[str, list[str]]]:
