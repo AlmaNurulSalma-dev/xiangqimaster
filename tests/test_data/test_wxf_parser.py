@@ -126,3 +126,26 @@ def test_parse_game_replays_iccs_moves():
 def test_parse_game_auto_notation_handles_iccs():
     game = parse_game(["h2e2", "h7e7"], outcome=DRAW)
     assert game.moves[0] == (2, 7, 2, 4)
+
+
+# ─── ICCS xqbase dialect: uppercase + dash (dpxq / WXF-Federation datasets) ──
+
+
+def test_iccs_uppercase_dash_variant():
+    # xqbase ICCS writes the central cannon as "H2-E2" (== UCCI "h2e2").
+    assert parse_iccs_move("H2-E2") == (2, 7, 2, 4)
+    assert parse_iccs_move("h2e2") == (2, 7, 2, 4)
+
+
+def test_detect_notation_recognises_uppercase_dash_iccs():
+    assert detect_notation("C3-C4") == "iccs"
+    # A WXF backward move like "H2-3" must NOT be mistaken for a coordinate move.
+    assert detect_notation("H2-3") == "wxf"
+
+
+def test_parse_game_replays_full_xqbase_iccs_game():
+    # First 8 plies of the CGLemon README sample game (xqbase ICCS, std start).
+    tokens = ["C3-C4", "C9-E7", "B2-D2", "G6-G5", "B0-C2", "B9-C7", "A0-B0", "A9-B9"]
+    game = parse_game(tokens, outcome=RED, notation="iccs")
+    assert len(game.moves) == 8
+    assert game.moves[0] == (3, 2, 4, 2)  # C3-C4

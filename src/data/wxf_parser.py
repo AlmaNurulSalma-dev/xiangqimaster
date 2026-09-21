@@ -185,18 +185,26 @@ class Game:
     outcome: int  # RED (+1), BLACK (-1), or DRAW (0)
 
 
-# ─── ICCS coordinate notation ──────────────────────────────────────────────
-# ICCS moves are pure coordinates like "b2e2" (file a-i = col 0-8, rank 0-9 =
-# row 0-9, rank 0 at Red's side). This is the notation dpxq / xqbase datasets
-# use, and it maps directly onto our (row, col).
+# ─── ICCS / UCCI coordinate notation ────────────────────────────────────────
+# Coordinate moves name the from/to squares directly: file a-i = col 0-8, rank
+# 0-9 = row 0-9 with rank 0 at Red's side, mapping straight onto our (row, col).
+# Two dialects appear in the wild and are both accepted here:
+#   * UCCI (engines, XiangqiCore): lowercase, no separator — "h2e2"
+#   * ICCS (xqbase / dpxq / WXF-Federation datasets): uppercase, dash — "C2-E2"
+# We normalise (drop the dash, lowercase) so a single code path handles both.
 _ICCS_RE = re.compile(r"^[a-i][0-9][a-i][0-9]$")
 
 
+def _normalize_coord(token: str) -> str:
+    """Normalise a coordinate token to the canonical ``h2e2`` form."""
+    return token.strip().replace("-", "").lower()
+
+
 def parse_iccs_move(token: str) -> FullMove:
-    """Parse an ICCS coordinate move like ``b2e2`` into an absolute move."""
-    tok = token.strip()
+    """Parse a coordinate move (``h2e2`` UCCI or ``C2-E2`` ICCS) into a move."""
+    tok = _normalize_coord(token)
     if not _ICCS_RE.match(tok):
-        raise WXFParseError(f"not an ICCS move: {token!r}")
+        raise WXFParseError(f"not a coordinate move: {token!r}")
     from_col = ord(tok[0]) - ord("a")
     from_row = int(tok[1])
     to_col = ord(tok[2]) - ord("a")
@@ -206,7 +214,7 @@ def parse_iccs_move(token: str) -> FullMove:
 
 def detect_notation(token: str) -> str:
     """Return ``"iccs"`` if the token is coordinate notation, else ``"wxf"``."""
-    return "iccs" if _ICCS_RE.match(token.strip()) else "wxf"
+    return "iccs" if _ICCS_RE.match(_normalize_coord(token)) else "wxf"
 
 
 def parse_move(board: Board, token: str, notation: str = "auto") -> FullMove:

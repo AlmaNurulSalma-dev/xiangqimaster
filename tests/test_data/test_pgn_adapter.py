@@ -115,3 +115,29 @@ def test_load_xiangqicore_ucci_pgn():
     assert stats.valid == 1
     assert games[0].moves[0] == (2, 7, 2, 4)  # h2e2 == C2.5
     assert len(games[0].moves) == 6
+
+
+# The CGLemon / dpxq / WXF-Federation datasets ship standard PGN in xqbase ICCS
+# notation (uppercase files + dash), tagged [Format "ICCS"].
+CGLEMON_ICCS_PGN = """[Game "Chinese Chess"]
+[Event "1998年全国象棋个人赛"]
+[Red "黑龙江 郭莉萍"]
+[Black "上海 单霞丽"]
+[Result "1-0"]
+[FEN "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1"]
+[Format "ICCS"]
+
+1. C3-C4 C9-E7
+2. B2-D2 G6-G5
+3. B0-C2 B9-C7
+4. A0-B0 A9-B9
+1-0
+"""
+
+
+def test_load_cglemon_iccs_pgn():
+    games, stats = pgn_adapter.load_games_from_pgn(CGLEMON_ICCS_PGN, min_plies=4)
+    assert stats.valid == 1
+    assert games[0].outcome == RED
+    assert games[0].moves[0] == (3, 2, 4, 2)  # C3-C4
+    assert len(games[0].moves) == 8
