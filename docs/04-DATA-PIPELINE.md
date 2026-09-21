@@ -14,24 +14,31 @@ The data pipeline turns raw human game records into a clean, labeled dataset use
 
 ## 2. Data Source
 
-### 2.1 Primary Dataset: kaifeiji/xiangqi
+### 2.1 Data source & processing
 
 | Property | Value |
 |---|---|
-| Name | kaifeiji/xiangqi game collection (PGN + WXF) |
-| Size | ~140,000 game records (99,813 PGN + 41,743 WXF) |
-| Format | PGN and WXF notation (World Xiangqi Federation) |
-| Content | Games from dpxq / WXF sources; some include player Elo, results |
-| Source | GitHub: https://github.com/kaifeiji/xiangqi |
+| Processing codebase | `github.com/kaifeiji/xiangqi` — expects PGN/XQF files in `data/raw/` |
+| Game sources | dpxq.com game archive, WXF Federation records (the actual games) |
+| Referenced inputs | e.g. `dpxq-99813games.pgn`, `WXF-41743games.pgn` (user-supplied) |
+| Format | PGN (Roman WXF movetext) and WXF/XQF |
+| Content | Professional & semi-professional games; some carry player Elo/results |
 | Cost | Free |
-| License | Check repo LICENSE — cite appropriately in thesis |
+| License | Check each source — cite appropriately in thesis |
 
-> **Note (verified 2026-09):** The originally-planned `donkeyid/xiangqi-dataset`
-> (claimed ~800k games) does **not exist** (404). `kaifeiji/xiangqi` is the
-> best verified public alternative. ~140k games is more than enough for
-> imitation-learning pre-training. Additional sources if more data is needed:
-> Kaggle "onlinexiangqi" (~10k blitz games), the WXF Federation game archive,
-> and the DpXq / 01xq online databases (scrapeable).
+> **Note (verified 2026-09):**
+> 1. The originally-planned `donkeyid/xiangqi-dataset` (claimed ~800k games)
+>    does **not exist** (GitHub 404).
+> 2. `github.com/kaifeiji/xiangqi` is a **processing codebase, NOT a dataset** —
+>    the PGN/XQF game files are not in the repo; you download them separately
+>    (from dpxq.com / the WXF Federation) and place them in `data/raw/`.
+> 3. This project ships its own loader: `src/data/pgn_adapter.py` reads Xiangqi
+>    PGN (Roman WXF movetext) → `src/data/game_loader.py` replay-validates and
+>    filters → `src/data/dataset.py` produces training tensors. Chinese-character
+>    or ICCS-coordinate movetext would need an additional move parser.
+> 4. Fallback sources: Kaggle "onlinexiangqi" (~10k blitz games), and the
+>    DpXq / 01xq online databases (scrapeable). Any tens-of-thousands of games
+>    is enough for imitation-learning pre-training.
 
 ### 2.2 Data Quality Filtering
 
