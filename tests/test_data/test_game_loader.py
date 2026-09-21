@@ -52,3 +52,12 @@ def test_load_games_from_file(tmp_path):
     games, stats = load_games_from_file(str(path), min_plies=4)
     assert stats.total == 3 and stats.valid == 1
     assert len(games) == 1
+
+
+def test_parse_records_passes_iccs_notation_through():
+    # dpxq-style coordinate records: both sides open with the central cannon.
+    # ICCS equivalents of VALID: central cannons then knights out.
+    records = [("red", ["h2e2", "h7e7", "h0g2", "h9g7"])]
+    games, stats = parse_game_records(records, min_plies=4, notation="iccs")
+    assert stats.valid == 1
+    assert games[0].moves[0] == (2, 7, 2, 4)

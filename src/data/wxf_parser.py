@@ -25,6 +25,7 @@ legality validation (docs/04 section 5) so corrupt records are caught.
 from __future__ import annotations
 
 from collections import defaultdict
+import re
 from dataclasses import dataclass
 
 from src.environment.board import Board
@@ -184,22 +185,60 @@ class Game:
     outcome: int  # RED (+1), BLACK (-1), or DRAW (0)
 
 
+# ─── ICCS coordinate notation ──────────────────────────────────────────────
+# ICCS moves are pure coordinates like "b2e2" (file a-i = col 0-8, rank 0-9 =
+# row 0-9, rank 0 at Red's side). This is the notation dpxq / xqbase datasets
+# use, and it maps directly onto our (row, col).
+_ICCS_RE = re.compile(r"^[a-i][0-9][a-i][0-9]$")
+
+
+def parse_iccs_move(token: str) -> FullMove:
+    """Parse an ICCS coordinate move like ``b2e2`` into an absolute move."""
+    tok = token.strip()
+    if not _ICCS_RE.match(tok):
+        raise WXFParseError(f"not an ICCS move: {token!r}")
+    from_col = ord(tok[0]) - ord("a")
+    from_row = int(tok[1])
+    to_col = ord(tok[2]) - ord("a")
+    to_row = int(tok[3])
+    return (from_row, from_col, to_row, to_col)
+
+
+def detect_notation(token: str) -> str:
+    """Return ``"iccs"`` if the token is coordinate notation, else ``"wxf"``."""
+    return "iccs" if _ICCS_RE.match(token.strip()) else "wxf"
+
+
+def parse_move(board: Board, token: str, notation: str = "auto") -> FullMove:
+    """Parse a single move token in WXF, ICCS, or auto-detected notation."""
+    if notation == "auto":
+        notation = detect_notation(token)
+    if notation == "iccs":
+        return parse_iccs_move(token)
+    if notation == "wxf":
+        return parse_wxf_move(board, token)
+    raise WXFParseError(f"unknown notation {notation!r}")
+
+
 def parse_game(
     tokens: list[str],
     outcome: int,
     *,
+    notation: str = "auto",
     validate: bool = True,
 ) -> Game:
-    """Replay a list of WXF tokens from the start position into a :class:`Game`.
+    """Replay move tokens from the start position into a validated :class:`Game`.
 
-    Each move is parsed relative to the current board and, if ``validate`` is
-    set, checked against the legal-move generator — an illegal move raises
-    :class:`WXFParseError`, so corrupt records are rejected (docs/04 section 5).
+    ``notation`` is ``"auto"`` (detect per token), ``"iccs"`` (``b2e2``), or
+    ``"wxf"`` (``C2.5``). Each move is parsed relative to the current board and,
+    if ``validate`` is set, checked against the legal-move generator — an illegal
+    move raises :class:`WXFParseError`, so corrupt records are rejected
+    (docs/04 section 5).
     """
     board = Board()
     moves: list[FullMove] = []
     for ply, token in enumerate(tokens):
-        move = parse_wxf_move(board, token)
+        move = parse_move(board, token, notation)
         if validate and move not in set(generate_legal_moves(board)):
             raise WXFParseError(
                 f"illegal move {token!r} (ply {ply}) → {move}"
@@ -209,4 +248,13 @@ def parse_game(
     return Game(moves=tuple(moves), outcome=outcome)
 
 
-__all__ = ["DRAW", "WXFParseError", "parse_wxf_move", "Game", "parse_game"]
+__all__ = [
+    "DRAW",
+    "WXFParseError",
+    "parse_wxf_move",
+    "parse_iccs_move",
+    "detect_notation",
+    "parse_move",
+    "Game",
+    "parse_game",
+]

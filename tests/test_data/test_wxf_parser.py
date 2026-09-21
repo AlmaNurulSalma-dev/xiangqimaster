@@ -5,7 +5,15 @@ from __future__ import annotations
 import pytest
 
 from src.data import wxf_parser
-from src.data.wxf_parser import DRAW, WXFParseError, parse_game, parse_wxf_move
+from src.data.wxf_parser import (
+    DRAW,
+    WXFParseError,
+    detect_notation,
+    parse_game,
+    parse_iccs_move,
+    parse_move,
+    parse_wxf_move,
+)
 from src.environment.board import Board
 from src.utils.config import BLACK, CHARIOT, GENERAL, RED
 
@@ -68,3 +76,53 @@ def test_parse_game_rejects_illegal_move():
 def test_unknown_piece_letter_raises():
     with pytest.raises(WXFParseError):
         parse_wxf_move(Board(), "Z2.5")
+
+
+# ─── ICCS coordinate notation ──────────────────────────────────────────────
+
+
+def test_iccs_move_maps_file_and_rank_to_row_col():
+    # "h2e2": file h = col 7, rank 2 = row 2 → file e = col 4, rank 2. This is
+    # the same central-cannon move as WXF "C2.5".
+    assert parse_iccs_move("h2e2") == (2, 7, 2, 4)
+
+
+def test_iccs_corner_move():
+    # "a0a1": file a = col 0, rank 0 = row 0 → rank 1 (chariot advances one).
+    assert parse_iccs_move("a0a1") == (0, 0, 1, 0)
+
+
+def test_detect_notation_distinguishes_iccs_from_wxf():
+    assert detect_notation("h2e2") == "iccs"
+    assert detect_notation("C2.5") == "wxf"
+
+
+def test_parse_move_auto_detects_iccs():
+    assert parse_move(Board(), "h2e2") == (2, 7, 2, 4)
+
+
+def test_parse_move_auto_detects_wxf():
+    assert parse_move(Board(), "C2.5") == (2, 7, 2, 4)
+
+
+def test_parse_move_rejects_unknown_notation():
+    with pytest.raises(WXFParseError):
+        parse_move(Board(), "h2e2", notation="pgn")
+
+
+def test_iccs_rejects_malformed_token():
+    with pytest.raises(WXFParseError):
+        parse_iccs_move("h2e")  # too short
+
+
+def test_parse_game_replays_iccs_moves():
+    # Both sides open with the central cannon in ICCS coordinates.
+    game = parse_game(["h2e2", "h7e7"], outcome=DRAW, notation="iccs")
+    assert len(game.moves) == 2
+    assert game.moves[0] == (2, 7, 2, 4)
+    assert game.moves[1] == (7, 7, 7, 4)
+
+
+def test_parse_game_auto_notation_handles_iccs():
+    game = parse_game(["h2e2", "h7e7"], outcome=DRAW)
+    assert game.moves[0] == (2, 7, 2, 4)

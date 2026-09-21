@@ -48,15 +48,20 @@ def parse_game_records(
     *,
     min_plies: int = 10,
     validate: bool = True,
+    notation: str = "auto",
 ) -> tuple[list[Game], LoadStats]:
-    """Parse and validate ``(result, tokens)`` records into games + stats."""
+    """Parse and validate ``(result, tokens)`` records into games + stats.
+
+    ``notation`` is passed through to the parser: ``"auto"`` (default),
+    ``"iccs"`` (dpxq coordinate moves) or ``"wxf"`` (Roman movetext).
+    """
     games: list[Game] = []
     stats = LoadStats()
     for result, tokens in records:
         stats.total += 1
         try:
             outcome = parse_result(result)
-            game = parse_game(tokens, outcome, validate=validate)
+            game = parse_game(tokens, outcome, notation=notation, validate=validate)
         except WXFParseError:
             stats.invalid += 1
             continue
