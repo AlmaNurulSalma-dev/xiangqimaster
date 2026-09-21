@@ -56,3 +56,11 @@ def test_load_games_from_pgn_validates_and_filters():
 def test_unfinished_games_are_skipped():
     pgn = '[Result "*"]\n\n1. C2.5 C8.5 *\n'
     assert pgn_adapter.pgn_to_records(pgn) == []
+
+
+def test_load_games_from_pgn_handles_iccs_movetext():
+    # dpxq-style PGN with ICCS coordinate moves (auto-detected).
+    pgn = '[Result "1-0"]\n\n1. h2e2 h7e7 2. h0g2 h9g7 1-0\n'
+    games, stats = pgn_adapter.load_games_from_pgn(pgn, min_plies=4)
+    assert stats.valid == 1
+    assert games[0].moves[0] == (2, 7, 2, 4)  # same as WXF "C2.5"

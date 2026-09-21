@@ -195,6 +195,15 @@ STEP 6: Create game-level train/val/test split → data/splits/
 STEP 7: Build opening reference distribution → data/openings/
 ```
 
+**Implementation:** `src/data/pipeline.py` orchestrates STEPS 2–6. Drop game
+files into `data/raw/` (`.pgn`, or `.txt` with one `<result> tok...` game per
+line) and run `python -m src.data.pipeline --raw data/raw --out data/splits`.
+It parses WXF *and* ICCS movetext (auto-detected), replay-validates every game,
+applies the length filters, builds a game-level split + `XiangqiILDataset` per
+split, and writes `data/splits/dataset_manifest.json` (the §12 statistics +
+seed/fraction metadata for a reproducible split). STEP 7 lives in
+`src/evaluation/opening_analysis.py`.
+
 Run this pipeline ONCE and cache all outputs. Re-running should be deterministic (seeded).
 
 ---

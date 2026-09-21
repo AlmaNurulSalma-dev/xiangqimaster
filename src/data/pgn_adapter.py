@@ -12,10 +12,10 @@ Turns standard Xiangqi PGN text into ``(result, tokens)`` records that
 We read the ``Result`` tag and strip move numbers, comments ``{...}``, NAGs
 ``$n`` and the trailing result token to recover the bare move list.
 
-**Assumes Roman WXF movetext** (``C2.5``, ``H2+3``) — the notation the WXF
-parser understands. Datasets in Chinese characters (炮二平五) or ICCS
-coordinates (``h2e2``) would need a different move parser; that is a documented
-limitation, not handled here.
+Movetext may be Roman WXF (``C2.5``, ``H2+3``) or ICCS coordinates (``h2e2``);
+the parser auto-detects per token, or a ``notation`` can be forced. Datasets in
+Chinese characters (炮二平五) would still need a different move parser; that is a
+documented limitation, not handled here.
 """
 
 from __future__ import annotations
@@ -96,14 +96,20 @@ def load_games_from_pgn(
     *,
     min_plies: int = 10,
     validate: bool = True,
+    notation: str = "auto",
 ) -> tuple[list[Game], LoadStats]:
-    """Load games from a PGN file path (or raw PGN text) with validation."""
+    """Load games from a PGN file path (or raw PGN text) with validation.
+
+    ``notation`` (``"auto"``/``"iccs"``/``"wxf"``) is passed to the parser.
+    """
     text = source
     if os.path.exists(source):
         with open(source, encoding="utf-8", errors="ignore") as f:
             text = f.read()
     records = pgn_to_records(text)
-    return parse_game_records(records, min_plies=min_plies, validate=validate)
+    return parse_game_records(
+        records, min_plies=min_plies, validate=validate, notation=notation
+    )
 
 
 __all__ = [

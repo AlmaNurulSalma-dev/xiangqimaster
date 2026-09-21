@@ -78,9 +78,13 @@ def load_games_from_file(
     *,
     min_plies: int = 10,
     validate: bool = True,
+    notation: str = "auto",
 ) -> tuple[list[Game], LoadStats]:
     """Load games from a simple text file: one game per line as
-    ``<result> tok1 tok2 ...``. Blank lines and ``#`` comments are ignored."""
+    ``<result> tok1 tok2 ...``. Blank lines and ``#`` comments are ignored.
+
+    ``notation`` (``"auto"``/``"iccs"``/``"wxf"``) is passed to the parser.
+    """
     records: list[tuple[str, list[str]]] = []
     with open(path, encoding="utf-8") as f:
         for line in f:
@@ -89,7 +93,9 @@ def load_games_from_file(
                 continue
             parts = line.split()
             records.append((parts[0], parts[1:]))
-    return parse_game_records(records, min_plies=min_plies, validate=validate)
+    return parse_game_records(
+        records, min_plies=min_plies, validate=validate, notation=notation
+    )
 
 
 __all__ = ["LoadStats", "parse_result", "parse_game_records", "load_games_from_file"]

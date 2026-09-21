@@ -61,3 +61,11 @@ def test_parse_records_passes_iccs_notation_through():
     games, stats = parse_game_records(records, min_plies=4, notation="iccs")
     assert stats.valid == 1
     assert games[0].moves[0] == (2, 7, 2, 4)
+
+
+def test_load_games_from_file_forwards_iccs_notation(tmp_path):
+    path = tmp_path / "games.txt"
+    path.write_text("red h2e2 h7e7 h0g2 h9g7\n", encoding="utf-8")
+    games, stats = load_games_from_file(str(path), min_plies=4, notation="iccs")
+    assert stats.valid == 1
+    assert games[0].moves[0] == (2, 7, 2, 4)
