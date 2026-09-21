@@ -64,3 +64,54 @@ def test_load_games_from_pgn_handles_iccs_movetext():
     games, stats = pgn_adapter.load_games_from_pgn(pgn, min_plies=4)
     assert stats.valid == 1
     assert games[0].moves[0] == (2, 7, 2, 4)  # same as WXF "C2.5"
+
+
+def test_ellipsis_placeholder_is_skipped():
+    # XiangqiCore emits "..." for a round with no move on one side.
+    tokens = pgn_adapter.extract_move_tokens("1. C2=5  c8=5 2. ...  h8+7")
+    assert "..." not in tokens
+    assert tokens == ["C2=5", "c8=5", "h8+7"]
+
+
+# XiangqiCore's DefaultPgnGenerationService writes this exact tag block, with
+# "1-0"/"0-1"/"1/2-1/2" Result values and "<n>. <red>  <black>" rounds. English
+# movetext uses uppercase Red / lowercase Black and "=" for a traversing move.
+XIANGQICORE_PGN_ENGLISH = """[Game "Chinese Chess"]
+[Event "Test Cup"]
+[Site "Somewhere"]
+[Date "2024.01.01"]
+[Red "Alice"]
+[RedTeam "TeamA"]
+[Black "Bob"]
+[BlackTeam "TeamB"]
+[Result "1-0"]
+[FEN "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1"]
+
+1. C2=5  c8=5
+2. H2+3  h8+7
+3. R1=2  r9=8
+"""
+
+XIANGQICORE_PGN_UCCI = """[Game "Chinese Chess"]
+[Result "0-1"]
+[FEN "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1"]
+
+1. h2e2  h7e7
+2. h0g2  h9g7
+3. i0h0  i9h9
+"""
+
+
+def test_load_xiangqicore_english_pgn():
+    games, stats = pgn_adapter.load_games_from_pgn(XIANGQICORE_PGN_ENGLISH, min_plies=4)
+    assert stats.valid == 1
+    assert games[0].outcome == RED
+    assert games[0].moves[0] == (2, 7, 2, 4)  # C2=5 central cannon
+    assert len(games[0].moves) == 6
+
+
+def test_load_xiangqicore_ucci_pgn():
+    games, stats = pgn_adapter.load_games_from_pgn(XIANGQICORE_PGN_UCCI, min_plies=4)
+    assert stats.valid == 1
+    assert games[0].moves[0] == (2, 7, 2, 4)  # h2e2 == C2.5
+    assert len(games[0].moves) == 6

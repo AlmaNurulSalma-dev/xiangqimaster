@@ -65,13 +65,19 @@ def parse_tags(tag_lines: list[str]) -> dict[str, str]:
 
 
 def extract_move_tokens(movetext: str) -> list[str]:
-    """Strip comments, NAGs, move numbers and the result → bare move tokens."""
+    """Strip comments, NAGs, move numbers and the result → bare move tokens.
+
+    A ``...`` placeholder (some generators, e.g. XiangqiCore, emit it for a
+    round whose side had no move) is skipped so it is not mistaken for a move.
+    """
     text = _COMMENT_RE.sub(" ", movetext)
     text = _NAG_RE.sub(" ", text)
     tokens: list[str] = []
     for raw in text.split():
         token = _MOVE_NUMBER_PREFIX.sub("", raw)  # drop a leading "12." prefix
         if not token or token in _RESULT_TOKENS:
+            continue
+        if set(token) == {"."}:  # a "..." / "." placeholder, not a move
             continue
         tokens.append(token)
     return tokens
