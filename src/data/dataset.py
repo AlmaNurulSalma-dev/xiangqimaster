@@ -17,6 +17,8 @@ pair consistent.
 
 from __future__ import annotations
 
+import bisect
+
 import numpy as np
 import torch
 from torch.utils.data import Dataset
@@ -89,4 +91,70 @@ class XiangqiILDataset(Dataset):
         return tensor, self._actions[index], self._values[index]
 
 
-__all__ = ["XiangqiILDataset", "mirror_move", "mirror_board"]
+class LazyXiangqiILDataset(Dataset):
+    """Lazy variant of :class:`XiangqiILDataset` for large corpora.
+
+    :class:`XiangqiILDataset` materialises every encoded position in RAM (~5 KB
+    each), which does not scale to 100k+ games (millions of positions → tens of
+    GB). This variant stores only the games and encodes each requested position
+    on access by replaying the game up to that ply (~0.13 ms/item), so memory is
+    O(games) instead of O(positions).
+
+    It yields the SAME ``(tensor, action_index, value)`` examples as
+    :class:`XiangqiILDataset` — one per ply, plus a left-right mirror per ply when
+    ``mirror`` is set — so it is a drop-in replacement in the DataLoader.
+    """
+
+    def __init__(
+        self,
+        games: list[Game],
+        *,
+        draw_value: float = 0.0,
+        mirror: bool = False,
+    ) -> None:
+        self._games = games
+        self._draw_value = draw_value
+        self._mirror = mirror
+        # Prefix sums of ply counts → map a flat position index to (game, ply)
+        # in O(log n) without materialising a per-position index.
+        self._cum: list[int] = []
+        running = 0
+        for game in games:
+            running += len(game.moves)
+            self._cum.append(running)
+        self._n_positions = running  # positions in a single orientation
+
+    def __len__(self) -> int:
+        return self._n_positions * (2 if self._mirror else 1)
+
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, int, float]:
+        # Indices [0, n) are normal; [n, 2n) are the mirrored copies.
+        mirrored = self._mirror and index >= self._n_positions
+        base = index - self._n_positions if mirrored else index
+
+        game_idx = bisect.bisect_right(self._cum, base)
+        prev = self._cum[game_idx - 1] if game_idx > 0 else 0
+        ply = base - prev
+        game = self._games[game_idx]
+
+        board = Board()
+        for k in range(ply):
+            board.apply_move(*game.moves[k])
+
+        move = game.moves[ply]
+        value = _value_for(game.outcome, board.to_move, self._draw_value)
+
+        if mirrored:
+            board = mirror_board(board)
+            move = mirror_move(move)
+
+        tensor = torch.from_numpy(encoder.encode(board))
+        return tensor, action_space.move_to_index(move), value
+
+
+__all__ = [
+    "XiangqiILDataset",
+    "LazyXiangqiILDataset",
+    "mirror_move",
+    "mirror_board",
+]

@@ -52,6 +52,28 @@ Top-1 move-prediction accuracy on the validation set. Professional-level imitati
 ### 2.5 Time Estimate
 ~6–8 hours on Colab T4 for 30–50 epochs over the filtered dataset.
 
+### 2.6 How to Run (implementation)
+The data pipeline (`src.data.pipeline`) writes game-level splits to
+`data/splits/{train,val,test}.jsonl`. `src.training.il_train` loads them into a
+memory-light `LazyXiangqiILDataset` (encodes each position on access — the full
+train split is ~9.3M positions, far too many to hold in RAM) and runs the
+supervised trainer, then saves the checkpoint that seeds Agent 2 Phase 2.
+
+```bash
+# Full corpus — a GPU / Colab job (CPU is impractical at ~9.3M positions/epoch)
+python -m src.training.il_train --splits data/splits --epochs 30 \
+    --device cuda --save results/checkpoints/il_agent2_phase1.pt
+
+# Quick local smoke test on a subset (caps GAMES loaded, not positions)
+python -m src.training.il_train --limit-train 2000 --limit-val 500 --epochs 1
+```
+
+Useful flags: `--mirror` (left-right augmentation), `--batch-size`,
+`--num-workers` (parallel data loading; use >0 on Linux/Colab), `--seed`.
+
+> Rebuild the splits first if `data/splits/` is empty:
+> `python -m src.data.pipeline --raw data/raw --out data/splits --notation iccs`.
+
 ---
 
 ## 3. PPO Self-Play Training (Agent 1 & Agent 2 Phase 2)
