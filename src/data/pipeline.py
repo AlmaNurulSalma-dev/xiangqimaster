@@ -36,7 +36,7 @@ from src.data.pgn_adapter import pgn_to_records
 from src.data.wxf_parser import DRAW, Game
 from src.utils.config import BLACK, DEFAULT_SEED, MAX_PLIES, RED
 
-PGN_EXTENSIONS = (".pgn",)
+PGN_EXTENSIONS = (".pgn", ".pgns")  # some dumps (CGLemon dpxq/WXF) use .pgns
 TEXT_EXTENSIONS = (".txt",)
 RAW_EXTENSIONS = PGN_EXTENSIONS + TEXT_EXTENSIONS
 
@@ -115,13 +115,83 @@ def load_raw_records(raw_dir: str) -> tuple[list[tuple[str, list[str]]], list[st
 
 @dataclass
 class BuildResult:
-    """Outputs of :func:`build_dataset`."""
+    """Outputs of :func:`build_dataset`.
 
-    train: XiangqiILDataset
-    val: XiangqiILDataset
-    test: XiangqiILDataset
+    ``train``/``val``/``test`` are materialised :class:`XiangqiILDataset` objects
+    only when ``materialize_tensors`` is set; otherwise they are ``None`` and the
+    split is available on disk as JSONL (see :func:`save_split_jsonl`).
+    """
+
+    train: XiangqiILDataset | None
+    val: XiangqiILDataset | None
+    test: XiangqiILDataset | None
     stats: DatasetStats
     manifest: dict
+
+
+SPLIT_NAMES = ("train", "val", "test")
+
+
+def save_split_jsonl(games: list[Game], path: str) -> None:
+    """Persist a split as JSON Lines: one ``{"o": outcome, "m": [[fr,fc,tr,tc]…]}``
+    record per game. This stores the parsed moves so training can rebuild a
+    dataset without re-reading and re-parsing the raw files."""
+    with open(path, "w", encoding="utf-8") as f:
+        for game in games:
+            record = {"o": game.outcome, "m": [list(m) for m in game.moves]}
+            f.write(json.dumps(record, separators=(",", ":")) + "\n")
+
+
+def load_split_jsonl(path: str) -> list[Game]:
+    """Reconstruct the games persisted by :func:`save_split_jsonl`."""
+    games: list[Game] = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            record = json.loads(line)
+            moves = tuple(tuple(m) for m in record["m"])
+            games.append(Game(moves=moves, outcome=record["o"]))
+    return games
+
+
+def _example_count(games: list[Game], mirror: bool) -> int:
+    """Number of (position, move) training pairs a split yields, computed
+    analytically (one per ply, doubled under mirror) so it needs no tensors."""
+    plies = sum(len(g.moves) for g in games)
+    return plies * (2 if mirror else 1)
+
+
+def spot_check_validity(
+    records: list[tuple[str, list[str]]],
+    *,
+    sample: int,
+    notation: str,
+    min_plies: int,
+    seed: int,
+) -> dict:
+    """Replay-validate a random sample of records and report the validity rate.
+
+    Full validation of a large pre-cleaned corpus is impractical (~0.5 s/game),
+    so we sample instead to get a quality figure for the thesis without the wait.
+    """
+    import random
+
+    n = min(sample, len(records))
+    if n == 0:
+        return {"sampled": 0, "invalid": 0, "legal_rate": 1.0}
+    chosen = random.Random(seed).sample(records, n)
+    # min_plies=0 so the length filter doesn't count against the integrity rate;
+    # ``invalid`` then means only "rejected as illegal on replay".
+    _games, stats = parse_game_records(
+        chosen, min_plies=0, validate=True, notation=notation
+    )
+    return {
+        "sampled": n,
+        "invalid": stats.invalid,
+        "legal_rate": round((n - stats.invalid) / n, 4),
+    }
 
 
 def _compute_stats(
@@ -163,11 +233,23 @@ def build_dataset(
     fractions: tuple[float, float, float] = (0.8, 0.1, 0.1),
     seed: int = DEFAULT_SEED,
     splits_dir: str | None = None,
+    materialize_tensors: bool = True,
+    spot_check: int = 0,
 ) -> BuildResult:
-    """Run the full pipeline: scan ``raw_dir`` → validate/filter → split → datasets.
+    """Run the pipeline: scan ``raw_dir`` → (validate)/filter → split → persist.
 
-    If ``splits_dir`` is given, a JSON manifest (stats + reproducibility metadata)
-    is written to ``<splits_dir>/dataset_manifest.json``.
+    ``validate`` replay-checks every move's legality; it is ~0.5 s/game, so for a
+    large pre-cleaned corpus prefer ``validate=False`` with ``spot_check=N`` to
+    sample a validity rate instead of paying the full cost.
+
+    ``materialize_tensors`` builds an in-memory :class:`XiangqiILDataset` per
+    split. That holds every encoded position in RAM (~5 KB each), which does not
+    scale to 100k+ games — leave it ``False`` for large corpora and let training
+    build a dataset lazily from the persisted split.
+
+    When ``splits_dir`` is given, writes ``train.jsonl``/``val.jsonl``/
+    ``test.jsonl`` (the split games) plus ``dataset_manifest.json`` (stats +
+    reproducibility metadata).
     """
     records, files = load_raw_records(raw_dir)
 
@@ -179,14 +261,15 @@ def build_dataset(
     kept = [g for g in games if len(g.moves) <= max_plies]
     too_long = len(games) - len(kept)
 
-    train_games, val_games, test_games = split_games(
-        kept, fractions, seed=seed
-    )
-    train = XiangqiILDataset(train_games, draw_value=draw_value, mirror=mirror)
-    val = XiangqiILDataset(val_games, draw_value=draw_value, mirror=mirror)
-    test = XiangqiILDataset(test_games, draw_value=draw_value, mirror=mirror)
+    train_games, val_games, test_games = split_games(kept, fractions, seed=seed)
+    splits = dict(zip(SPLIT_NAMES, (train_games, val_games, test_games)))
 
-    total_examples = len(train) + len(val) + len(test)
+    # Example counts are analytic (one per ply, doubled if mirrored) so we never
+    # need to build tensors just to report or split.
+    example_counts = {
+        name: _example_count(g, mirror) for name, g in splits.items()
+    }
+    total_examples = sum(example_counts.values())
     stats = _compute_stats(files, load_stats, kept, too_long, total_examples)
 
     manifest = {
@@ -197,24 +280,46 @@ def build_dataset(
         "notation": notation,
         "mirror": mirror,
         "draw_value": draw_value,
+        "validated": validate,
         "split_sizes": {
             "train_games": len(train_games),
             "val_games": len(val_games),
             "test_games": len(test_games),
-            "train_examples": len(train),
-            "val_examples": len(val),
-            "test_examples": len(test),
+            "train_examples": example_counts["train"],
+            "val_examples": example_counts["val"],
+            "test_examples": example_counts["test"],
         },
         "stats": stats.as_dict(),
     }
+    if spot_check and not validate:
+        manifest["spot_check"] = spot_check_validity(
+            records, sample=spot_check, notation=notation,
+            min_plies=min_plies, seed=seed,
+        )
 
     if splits_dir is not None:
         os.makedirs(splits_dir, exist_ok=True)
+        for name, split_group in splits.items():
+            save_split_jsonl(split_group, os.path.join(splits_dir, f"{name}.jsonl"))
         manifest_path = os.path.join(splits_dir, "dataset_manifest.json")
         with open(manifest_path, "w", encoding="utf-8") as f:
             json.dump(manifest, f, indent=2, ensure_ascii=False)
 
-    return BuildResult(train=train, val=val, test=test, stats=stats, manifest=manifest)
+    if materialize_tensors:
+        datasets = {
+            name: XiangqiILDataset(g, draw_value=draw_value, mirror=mirror)
+            for name, g in splits.items()
+        }
+    else:
+        datasets = {name: None for name in SPLIT_NAMES}
+
+    return BuildResult(
+        train=datasets["train"],
+        val=datasets["val"],
+        test=datasets["test"],
+        stats=stats,
+        manifest=manifest,
+    )
 
 
 def _format_stats(stats: DatasetStats) -> str:
@@ -237,14 +342,26 @@ def _format_stats(stats: DatasetStats) -> str:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Build IL datasets from raw games.")
     parser.add_argument("--raw", default="data/raw", help="raw game-file directory")
-    parser.add_argument("--out", default="data/splits", help="split manifest output dir")
+    parser.add_argument("--out", default="data/splits", help="split output dir")
     parser.add_argument("--min-plies", type=int, default=10)
     parser.add_argument("--max-plies", type=int, default=MAX_PLIES)
     parser.add_argument(
         "--notation", choices=["auto", "wxf", "iccs"], default="auto"
     )
     parser.add_argument("--mirror", action="store_true", help="add mirror augmentation")
-    parser.add_argument("--no-validate", action="store_true", help="skip replay validation")
+    parser.add_argument(
+        "--validate", action="store_true",
+        help="replay-validate EVERY game (~0.5 s/game; slow on large corpora)",
+    )
+    parser.add_argument(
+        "--spot-check", type=int, default=500,
+        help="when not validating, replay-validate this many random games for a "
+             "quality rate (0 to disable)",
+    )
+    parser.add_argument(
+        "--materialize", action="store_true",
+        help="also build in-memory tensor datasets (only for small corpora)",
+    )
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     args = parser.parse_args(argv)
 
@@ -253,21 +370,34 @@ def main(argv: list[str] | None = None) -> None:
         min_plies=args.min_plies,
         max_plies=args.max_plies,
         notation=args.notation,
-        validate=not args.no_validate,
+        validate=args.validate,
+        spot_check=args.spot_check,
         mirror=args.mirror,
         seed=args.seed,
         splits_dir=args.out,
+        materialize_tensors=args.materialize,
     )
     print(_format_stats(result.stats))
-    print(f"\nManifest written to {os.path.join(args.out, 'dataset_manifest.json')}")
+    sc = result.manifest.get("spot_check")
+    if sc:
+        print(f"  spot-check        : {sc['sampled']} sampled, {sc['invalid']} "
+              f"illegal ({sc['legal_rate'] * 100:.1f}% legal)")
+    sizes = result.manifest["split_sizes"]
+    print(f"  split (games)     : train {sizes['train_games']} / "
+          f"val {sizes['val_games']} / test {sizes['test_games']}")
+    print(f"\nSplits + manifest written to {args.out}/")
 
 
 __all__ = [
     "DatasetStats",
     "BuildResult",
+    "SPLIT_NAMES",
     "find_raw_files",
     "records_from_file",
     "load_raw_records",
+    "save_split_jsonl",
+    "load_split_jsonl",
+    "spot_check_validity",
     "build_dataset",
     "main",
 ]

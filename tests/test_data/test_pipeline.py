@@ -10,8 +10,11 @@ from src.data.pipeline import (
     build_dataset,
     find_raw_files,
     load_raw_records,
+    load_split_jsonl,
     records_from_file,
+    save_split_jsonl,
 )
+from src.data.wxf_parser import Game
 
 # A valid 6-ply opening in WXF and its exact ICCS equivalent.
 WXF_GAME = "C2.5 C2.5 H2+3 H8+7 R1.2 R9.8"
@@ -127,3 +130,60 @@ def test_build_dataset_empty_dir_is_graceful(tmp_path):
     result = build_dataset(str(tmp_path), min_plies=4)
     assert result.stats.final_games == 0
     assert len(result.train) == 0
+
+
+def test_split_jsonl_round_trip(tmp_path):
+    games = [
+        Game(moves=((2, 7, 2, 4), (7, 7, 7, 4)), outcome=1),
+        Game(moves=((0, 8, 1, 8),), outcome=0),
+    ]
+    path = tmp_path / "train.jsonl"
+    save_split_jsonl(games, str(path))
+    restored = load_split_jsonl(str(path))
+    assert restored == games  # dataclass eq: moves (as tuples) + outcome match
+
+
+def test_build_dataset_persists_split_jsonl(tmp_path):
+    _write_raw(tmp_path)
+    out = tmp_path / "splits"
+    result = build_dataset(str(tmp_path), min_plies=4, splits_dir=str(out))
+    # One JSONL per split, and they collectively hold every kept game.
+    total = 0
+    for name in ("train", "val", "test"):
+        f = out / f"{name}.jsonl"
+        assert f.exists()
+        total += len(load_split_jsonl(str(f)))
+    assert total == result.stats.final_games == 3
+
+
+def test_build_dataset_no_materialize_skips_tensors(tmp_path):
+    _write_raw(tmp_path)
+    result = build_dataset(str(tmp_path), min_plies=4, materialize_tensors=False)
+    assert result.train is None and result.val is None and result.test is None
+    # Stats + example counts are still computed analytically.
+    assert result.stats.final_games == 3
+    assert result.stats.total_examples == 18
+
+
+def test_example_counts_match_materialized_dataset(tmp_path):
+    # The analytic example count must equal the real dataset length.
+    _write_raw(tmp_path)
+    result = build_dataset(str(tmp_path), min_plies=4, materialize_tensors=True)
+    materialized = len(result.train) + len(result.val) + len(result.test)
+    assert materialized == result.stats.total_examples == 18
+
+
+def test_spot_check_reports_validity_rate(tmp_path):
+    _write_raw(tmp_path)
+    out = tmp_path / "splits"
+    result = build_dataset(
+        str(tmp_path), min_plies=4, validate=False, spot_check=10,
+        materialize_tensors=False, splits_dir=str(out),
+    )
+    sc = result.manifest["spot_check"]
+    # _write_raw yields 4 records (3 from a.txt + 1 from b.pgn); all are legal,
+    # so none are rejected on replay regardless of the length filter.
+    assert sc["sampled"] == 4
+    assert sc["invalid"] == 0
+    assert sc["legal_rate"] == 1.0
+    assert result.manifest["validated"] is False
