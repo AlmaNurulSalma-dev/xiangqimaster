@@ -128,6 +128,21 @@ Use `sb3-contrib`'s MaskablePPO so illegal moves are masked during both action s
 - ~100k games ≈ 3–4 hours (Colab T4)
 - 500k games ≈ 15–20 hours → split across multiple overnight sessions with checkpointing
 
+### 3.8 How to Run (implementation)
+`src.training.ppo_train` wires our ResNet body into `sb3-contrib`'s MaskablePPO.
+
+```bash
+# Agent 1 — self-play from random weights
+python -m src.training.ppo_train --timesteps 500000 --save results/checkpoints/ppo_agent1
+
+# Agent 2 Phase 2 — fine-tune from the IL checkpoint (transfers the shared body;
+# SB3's policy/value heads start fresh). --il-checkpoint must match the model's
+# channels/num_blocks (both default to config).
+python -m src.training.ppo_train --timesteps 500000 \
+    --il-checkpoint results/checkpoints/il_agent2_phase1.pt \
+    --save results/checkpoints/ppo_agent2
+```
+
 ---
 
 ## 4. MCTS Self-Play Training (Agent 3)

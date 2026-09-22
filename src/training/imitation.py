@@ -23,7 +23,9 @@ from src.models.network import PolicyValueNetwork
 from src.utils.config import (
     IL_LEARNING_RATE,
     IL_EPOCHS,
+    NN_CHANNEL_WIDTH,
     NN_L2_WEIGHT_DECAY,
+    NN_NUM_RES_BLOCKS,
 )
 
 
@@ -147,10 +149,29 @@ def save_checkpoint(network: PolicyValueNetwork, path: str) -> None:
     torch.save(network.state_dict(), path)
 
 
+def load_network(
+    path: str,
+    *,
+    channels: int = NN_CHANNEL_WIDTH,
+    num_blocks: int = NN_NUM_RES_BLOCKS,
+    device: str | torch.device = "cpu",
+) -> PolicyValueNetwork:
+    """Load an IL checkpoint (saved by :func:`save_checkpoint`) into a network.
+
+    ``channels``/``num_blocks`` must match those the checkpoint was trained with.
+    This is how Agent 2 Phase 2 (PPO fine-tuning) picks up the IL body — see
+    ``ppo_train.transfer_il_weights``.
+    """
+    network = PolicyValueNetwork(channels=channels, num_blocks=num_blocks)
+    network.load_state_dict(torch.load(path, map_location=device))
+    return network
+
+
 __all__ = [
     "EpochStats",
     "run_epoch",
     "evaluate",
     "train_imitation",
     "save_checkpoint",
+    "load_network",
 ]

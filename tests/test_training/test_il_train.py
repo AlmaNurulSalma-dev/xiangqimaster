@@ -53,3 +53,41 @@ def test_train_from_splits_saves_checkpoint(tmp_path):
         str(tmp_path), epochs=1, batch_size=8, seed=0, save_path=str(save_path)
     )
     assert save_path.exists()
+
+
+def test_load_network_round_trips_weights(tmp_path):
+    import torch
+
+    from src.models.network import PolicyValueNetwork
+    from src.training.imitation import load_network, save_checkpoint
+
+    original = PolicyValueNetwork(channels=8, num_blocks=1)
+    path = tmp_path / "il.pt"
+    save_checkpoint(original, str(path))
+    loaded = load_network(str(path), channels=8, num_blocks=1)
+    assert torch.allclose(
+        loaded.input_conv.conv.weight, original.input_conv.conv.weight
+    )
+
+
+def test_il_checkpoint_on_disk_transfers_into_ppo(tmp_path):
+    # Full Agent 2 bridge: IL checkpoint on disk → PPO features extractor body.
+    import torch
+
+    from src.models.network import PolicyValueNetwork
+    from src.training.imitation import load_network, save_checkpoint
+    from src.training.ppo_train import build_model
+
+    il = PolicyValueNetwork(channels=8, num_blocks=1)
+    ckpt = tmp_path / "il.pt"
+    save_checkpoint(il, str(ckpt))
+
+    loaded = load_network(str(ckpt), channels=8, num_blocks=1)
+    model = build_model(
+        channels=8, num_blocks=1, n_steps=64, batch_size=32, seed=0,
+        il_network=loaded,
+    )
+    assert torch.allclose(
+        model.policy.features_extractor.input_conv.conv.weight.detach(),
+        il.input_conv.conv.weight.detach(),
+    )

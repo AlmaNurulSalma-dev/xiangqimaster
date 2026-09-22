@@ -117,8 +117,21 @@ def train(
     batch_size: int = PPO_BATCH_SIZE,
     seed: int | None = None,
     verbose: int = 1,
+    il_checkpoint: str | None = None,
 ) -> MaskablePPO:
-    """Train a PPO self-play agent and optionally save it."""
+    """Train a PPO self-play agent and optionally save it.
+
+    Pass ``il_checkpoint`` to start from an imitation-learning checkpoint (Agent
+    2 Phase 2): its body is transferred into the features extractor. The
+    checkpoint must have been trained with the same ``channels``/``num_blocks``.
+    """
+    il_network = None
+    if il_checkpoint is not None:
+        from src.training.imitation import load_network
+
+        il_network = load_network(
+            il_checkpoint, channels=channels, num_blocks=num_blocks
+        )
     model = build_model(
         channels=channels,
         num_blocks=num_blocks,
@@ -126,6 +139,7 @@ def train(
         batch_size=batch_size,
         seed=seed,
         verbose=verbose,
+        il_network=il_network,
     )
     model.learn(total_timesteps=total_timesteps)
     if save_path is not None:
@@ -134,12 +148,18 @@ def train(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Train Agent 1 (PPO self-play).")
+    parser = argparse.ArgumentParser(
+        description="Train PPO self-play (Agent 1, or Agent 2 Phase 2 with --il-checkpoint)."
+    )
     parser.add_argument("--timesteps", type=int, default=100_000)
     parser.add_argument("--save", type=str, default="results/checkpoints/ppo_agent1")
     parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument(
+        "--il-checkpoint", type=str, default=None,
+        help="IL checkpoint to initialise from (Agent 2 Phase 2)",
+    )
     args = parser.parse_args()
-    train(args.timesteps, args.save, seed=args.seed)
+    train(args.timesteps, args.save, seed=args.seed, il_checkpoint=args.il_checkpoint)
 
 
 if __name__ == "__main__":
