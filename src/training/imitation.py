@@ -13,6 +13,7 @@ accuracy on a held-out set (40-55% is typical for professional imitation).
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import torch
@@ -109,10 +110,15 @@ def train_imitation(
     weight_decay: float = NN_L2_WEIGHT_DECAY,
     device: str | torch.device = "cpu",
     seed: int | None = None,
+    start_epoch: int = 0,
+    on_epoch_end: Callable[[EpochStats, PolicyValueNetwork], None] | None = None,
 ) -> tuple[PolicyValueNetwork, list[EpochStats]]:
     """Train (or continue training) the network by imitation learning.
 
-    Returns the trained network and per-epoch stats.
+    ``on_epoch_end(stats, network)`` is called after every epoch — use it to
+    checkpoint (important on Colab, which disconnects). ``start_epoch`` offsets
+    the reported epoch numbers when resuming. Returns the network + per-epoch
+    stats.
     """
     if seed is not None:
         torch.manual_seed(seed)
@@ -127,20 +133,21 @@ def train_imitation(
     )
 
     history: list[EpochStats] = []
-    for epoch in range(epochs):
+    for epoch in range(start_epoch, start_epoch + epochs):
         train_loss, p_loss, v_loss = run_epoch(
             network, train_loader, optimizer, device
         )
         val_acc = evaluate(network, val_loader, device) if val_loader else None
-        history.append(
-            EpochStats(
-                epoch=epoch,
-                train_loss=train_loss,
-                train_policy_loss=p_loss,
-                train_value_loss=v_loss,
-                val_accuracy=val_acc,
-            )
+        stats = EpochStats(
+            epoch=epoch,
+            train_loss=train_loss,
+            train_policy_loss=p_loss,
+            train_value_loss=v_loss,
+            val_accuracy=val_acc,
         )
+        history.append(stats)
+        if on_epoch_end is not None:
+            on_epoch_end(stats, network)
     return network, history
 
 

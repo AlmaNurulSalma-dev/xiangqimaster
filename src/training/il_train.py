@@ -27,7 +27,7 @@ from src.data.dataset import LazyXiangqiILDataset
 from src.data.data_loader import make_dataloader
 from src.data.pipeline import load_split_jsonl
 from src.data.wxf_parser import Game
-from src.training.imitation import save_checkpoint, train_imitation
+from src.training.imitation import load_network, save_checkpoint, train_imitation
 from src.utils.config import IL_BATCH_SIZE, IL_EPOCHS, IL_LEARNING_RATE
 
 
@@ -53,8 +53,14 @@ def train_from_splits(
     device: str = "cpu",
     seed: int | None = None,
     save_path: str | None = None,
+    resume: bool = False,
 ):
-    """Load splits, build lazy datasets + loaders, and run imitation training."""
+    """Load splits, build lazy datasets + loaders, and run imitation training.
+
+    If ``save_path`` is set, a checkpoint is written after EVERY epoch (Colab
+    disconnects), overwriting ``save_path``. With ``resume=True`` and an existing
+    ``save_path``, training continues from those weights.
+    """
     train_games = _load_split(splits_dir, "train", limit_train)
     val_games = _load_split(splits_dir, "val", limit_val)
 
@@ -75,26 +81,38 @@ def train_from_splits(
         val_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers
     )
 
-    network, history = train_imitation(
-        train_loader,
-        val_loader,
-        epochs=epochs,
-        learning_rate=learning_rate,
-        device=device,
-        seed=seed,
-    )
+    # Resume from an existing checkpoint if asked (Colab restart).
+    network = None
+    if resume and save_path is not None and os.path.isfile(save_path):
+        network = load_network(save_path, device=device)
+        print(f"resuming from {save_path}")
 
-    for stats in history:
+    if save_path is not None:
+        os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
+
+    def _report(stats, net):
         acc = "n/a" if stats.val_accuracy is None else f"{stats.val_accuracy:.3f}"
         print(
             f"epoch {stats.epoch:>3} | loss {stats.train_loss:.4f} "
             f"(p {stats.train_policy_loss:.4f} / v {stats.train_value_loss:.4f}) "
-            f"| val top-1 {acc}"
+            f"| val top-1 {acc}",
+            flush=True,
         )
+        if save_path is not None:  # checkpoint every epoch (survive disconnects)
+            save_checkpoint(net, save_path)
+
+    network, history = train_imitation(
+        train_loader,
+        val_loader,
+        network=network,
+        epochs=epochs,
+        learning_rate=learning_rate,
+        device=device,
+        seed=seed,
+        on_epoch_end=_report,
+    )
 
     if save_path is not None:
-        os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
-        save_checkpoint(network, save_path)
         print(f"checkpoint saved to {save_path}")
 
     return network, history
@@ -116,6 +134,10 @@ def main(argv: list[str] | None = None) -> None:
         "--save", default="results/checkpoints/il_agent2_phase1.pt",
         help="checkpoint output path (empty to skip saving)",
     )
+    parser.add_argument(
+        "--resume", action="store_true",
+        help="continue from an existing --save checkpoint (Colab restart)",
+    )
     args = parser.parse_args(argv)
 
     train_from_splits(
@@ -130,6 +152,7 @@ def main(argv: list[str] | None = None) -> None:
         device=args.device,
         seed=args.seed,
         save_path=args.save or None,
+        resume=args.resume,
     )
 
 

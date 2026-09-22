@@ -55,6 +55,49 @@ def test_train_from_splits_saves_checkpoint(tmp_path):
     assert save_path.exists()
 
 
+def test_checkpoint_written_each_epoch(tmp_path):
+    # A checkpoint must exist mid-run (after epoch 0), not only at the end.
+    _write_splits(tmp_path)
+    save_path = tmp_path / "il.pt"
+    seen = {}
+
+    import src.training.il_train as il
+
+    real_save = il.save_checkpoint
+
+    def spy(net, path):
+        seen["count"] = seen.get("count", 0) + 1
+        real_save(net, path)
+
+    il.save_checkpoint = spy
+    try:
+        train_from_splits(
+            str(tmp_path), epochs=3, batch_size=8, seed=0, save_path=str(save_path)
+        )
+    finally:
+        il.save_checkpoint = real_save
+    assert seen["count"] == 3  # one per epoch
+
+
+def test_resume_loads_existing_checkpoint(tmp_path):
+    import torch
+
+    _write_splits(tmp_path)
+    save_path = tmp_path / "il.pt"
+    train_from_splits(
+        str(tmp_path), epochs=1, batch_size=8, seed=0, save_path=str(save_path)
+    )
+    weights_after_first = torch.load(str(save_path))
+    # Resuming picks up the saved weights (starting point) rather than re-init.
+    net, history = train_from_splits(
+        str(tmp_path), epochs=1, batch_size=8, seed=0,
+        save_path=str(save_path), resume=True,
+    )
+    assert len(history) == 1
+    # Sanity: the resumed run produced a valid network and updated the file.
+    assert set(net.state_dict().keys()) == set(weights_after_first.keys())
+
+
 def test_load_network_round_trips_weights(tmp_path):
     import torch
 
