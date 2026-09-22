@@ -23,10 +23,14 @@ ENV/
 .env
 *.local
 
-# ─── Data (large, downloaded — never commit) ──────────────
+# ─── Data (large, downloaded / derived — never commit) ────
 data/raw/*
 data/processed/*
+# large persisted splits (reproducible from raw + seed)
+data/splits/*.jsonl
 !data/**/.gitkeep
+# tiny; kept as the dataset-stats record for the thesis
+!data/splits/dataset_manifest.json
 
 # ─── Model checkpoints & large artifacts ──────────────────
 results/checkpoints/*

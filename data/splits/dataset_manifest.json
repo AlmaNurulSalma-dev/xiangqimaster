@@ -1,0 +1,43 @@
+{
+  "seed": 42,
+  "fractions": [
+    0.8,
+    0.1,
+    0.1
+  ],
+  "min_plies": 10,
+  "max_plies": 300,
+  "notation": "iccs",
+  "mirror": false,
+  "draw_value": 0.0,
+  "validated": false,
+  "split_sizes": {
+    "train_games": 113084,
+    "val_games": 14135,
+    "test_games": 14137,
+    "train_examples": 9296810,
+    "val_examples": 1165000,
+    "test_examples": 1163111
+  },
+  "stats": {
+    "files": [
+      "WXF-41743games.pgns",
+      "dpxq-99813games.pgns"
+    ],
+    "total_games": 141556,
+    "invalid": 0,
+    "too_short": 26,
+    "too_long": 174,
+    "final_games": 141356,
+    "total_examples": 11624921,
+    "red_wins": 53764,
+    "black_wins": 39860,
+    "draws": 47732,
+    "avg_plies": 82.24
+  },
+  "spot_check": {
+    "sampled": 500,
+    "invalid": 0,
+    "legal_rate": 1.0
+  }
+}
