@@ -5,6 +5,11 @@ A Comparative Study of Deep Reinforcement Learning Approaches for Xiangqi
 
 **Final thesis project** · Dual-degree UII × NXU · Author: Alma (L25020007)
 
+> 📖 **New here? Read [`PROJECT_GUIDE.md`](PROJECT_GUIDE.md)** — a complete,
+> plain-English walkthrough of the whole project: what it is, the four agents,
+> why we benchmark against ElephantEye, the full folder/file/function breakdown,
+> every design decision, and what's done vs. still to do.
+
 ---
 
 ## 📚 Documentation
