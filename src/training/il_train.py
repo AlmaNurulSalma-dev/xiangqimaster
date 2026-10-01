@@ -54,11 +54,15 @@ def train_from_splits(
     seed: int | None = None,
     save_path: str | None = None,
     resume: bool = False,
+    save_every: int = 0,
 ):
     """Load splits, build lazy datasets + loaders, and run imitation training.
 
-    If ``save_path`` is set, a checkpoint is written after EVERY epoch (Colab
-    disconnects), overwriting ``save_path``. With ``resume=True`` and an existing
+    If ``save_path`` is set, a checkpoint is written after EVERY epoch, and —
+    when ``save_every > 0`` — also every ``save_every`` optimizer steps WITHIN an
+    epoch (both overwrite ``save_path``). Intra-epoch saving matters on Colab,
+    where one epoch over millions of positions can take many minutes and a
+    disconnect would otherwise lose it all. With ``resume=True`` and an existing
     ``save_path``, training continues from those weights.
     """
     train_games = _load_split(splits_dir, "train", limit_train)
@@ -101,6 +105,12 @@ def train_from_splits(
         if save_path is not None:  # checkpoint every epoch (survive disconnects)
             save_checkpoint(net, save_path)
 
+    def _checkpoint_steps(step, net):
+        # Intra-epoch checkpoint: overwrite save_path every `save_every` steps.
+        if save_path is not None and save_every and step % save_every == 0:
+            save_checkpoint(net, save_path)
+            print(f"  [checkpoint] step {step} -> {save_path}", flush=True)
+
     network, history = train_imitation(
         train_loader,
         val_loader,
@@ -110,6 +120,7 @@ def train_from_splits(
         device=device,
         seed=seed,
         on_epoch_end=_report,
+        on_batch_end=_checkpoint_steps if save_every else None,
     )
 
     if save_path is not None:
@@ -138,6 +149,12 @@ def main(argv: list[str] | None = None) -> None:
         "--resume", action="store_true",
         help="continue from an existing --save checkpoint (Colab restart)",
     )
+    parser.add_argument(
+        "--save-every", type=int, default=0,
+        help="also checkpoint every N optimizer steps within an epoch "
+             "(0 = only at epoch end). Use on Colab so a mid-epoch disconnect "
+             "still saves, e.g. 500.",
+    )
     args = parser.parse_args(argv)
 
     train_from_splits(
@@ -153,6 +170,7 @@ def main(argv: list[str] | None = None) -> None:
         seed=args.seed,
         save_path=args.save or None,
         resume=args.resume,
+        save_every=args.save_every,
     )
 
 

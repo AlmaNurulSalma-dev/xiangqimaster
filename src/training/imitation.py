@@ -56,8 +56,17 @@ def run_epoch(
     loader: DataLoader,
     optimizer: torch.optim.Optimizer,
     device: torch.device,
+    *,
+    on_batch_end: Callable[[int, PolicyValueNetwork], None] | None = None,
+    step_offset: int = 0,
 ) -> tuple[float, float, float]:
-    """Train for one epoch; return (avg_total, avg_policy, avg_value) loss."""
+    """Train for one epoch; return (avg_total, avg_policy, avg_value) loss.
+
+    ``on_batch_end(global_step, network)`` is called after every optimizer step
+    (``global_step`` counts batches across the whole run via ``step_offset``).
+    Use it for intra-epoch checkpointing so a crash mid-epoch still saves — vital
+    on Colab, where one epoch over millions of positions can take many minutes.
+    """
     network.train()
     policy_loss_fn = nn.CrossEntropyLoss()
     value_loss_fn = nn.MSELoss()
@@ -78,6 +87,8 @@ def run_epoch(
         total_p += policy_loss.item()
         total_v += value_loss.item()
         n_batches += 1
+        if on_batch_end is not None:
+            on_batch_end(step_offset + n_batches, network)
 
     return total / n_batches, total_p / n_batches, total_v / n_batches
 
@@ -112,13 +123,15 @@ def train_imitation(
     seed: int | None = None,
     start_epoch: int = 0,
     on_epoch_end: Callable[[EpochStats, PolicyValueNetwork], None] | None = None,
+    on_batch_end: Callable[[int, PolicyValueNetwork], None] | None = None,
 ) -> tuple[PolicyValueNetwork, list[EpochStats]]:
     """Train (or continue training) the network by imitation learning.
 
-    ``on_epoch_end(stats, network)`` is called after every epoch — use it to
-    checkpoint (important on Colab, which disconnects). ``start_epoch`` offsets
-    the reported epoch numbers when resuming. Returns the network + per-epoch
-    stats.
+    ``on_epoch_end(stats, network)`` is called after every epoch and
+    ``on_batch_end(global_step, network)`` after every optimizer step — use
+    either to checkpoint (important on Colab, which disconnects). ``start_epoch``
+    offsets the reported epoch numbers when resuming. Returns the network +
+    per-epoch stats.
     """
     if seed is not None:
         torch.manual_seed(seed)
@@ -133,10 +146,13 @@ def train_imitation(
     )
 
     history: list[EpochStats] = []
+    step_offset = 0
     for epoch in range(start_epoch, start_epoch + epochs):
         train_loss, p_loss, v_loss = run_epoch(
-            network, train_loader, optimizer, device
+            network, train_loader, optimizer, device,
+            on_batch_end=on_batch_end, step_offset=step_offset,
         )
+        step_offset += len(train_loader)
         val_acc = evaluate(network, val_loader, device) if val_loader else None
         stats = EpochStats(
             epoch=epoch,
