@@ -138,10 +138,25 @@ python -m src.training.ppo_train --timesteps 500000 --save results/checkpoints/p
 # Agent 2 Phase 2 — fine-tune from the IL checkpoint (transfers the shared body;
 # SB3's policy/value heads start fresh). --il-checkpoint must match the model's
 # channels/num_blocks (both default to config).
-python -m src.training.ppo_train --timesteps 500000 \
+python -m src.training.ppo_train --timesteps 500000 --checkpoint-every 10000 \
     --il-checkpoint results/checkpoints/il_agent2_phase1.pt \
     --save results/checkpoints/ppo_agent2
 ```
+
+**Disconnect-safe training.** `--checkpoint-every N` saves the model every N steps
+during `learn()` (not only at the end), and `--resume` continues from an existing
+`--save` checkpoint instead of starting over — essential for long PPO runs on
+Colab. Each resumed run trains `--timesteps` additional steps, so you can split a
+long run across sessions:
+
+```bash
+# first session
+python -m src.training.ppo_train --timesteps 500000 --checkpoint-every 10000 --save results/checkpoints/ppo_agent1
+# after an interruption — continue from the last saved checkpoint
+python -m src.training.ppo_train --timesteps 500000 --checkpoint-every 10000 --save results/checkpoints/ppo_agent1 --resume
+```
+
+`--device auto` (default) uses the GPU when available, else CPU.
 
 ---
 

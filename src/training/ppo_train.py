@@ -16,8 +16,10 @@ training needs hundreds of thousands of self-play steps.
 from __future__ import annotations
 
 import argparse
+import os
 
 from sb3_contrib import MaskablePPO
+from stable_baselines3.common.callbacks import BaseCallback
 
 from src.models.network import PolicyValueNetwork
 from src.models.sb3_extractor import XiangqiResNetExtractor
@@ -69,11 +71,13 @@ def build_model(
     seed: int | None = None,
     verbose: int = 0,
     il_network: PolicyValueNetwork | None = None,
+    device: str = "auto",
 ) -> MaskablePPO:
     """Construct a MaskablePPO model on a SelfPlayEnv using our ResNet body.
 
     If ``il_network`` is given, its body is transferred into the extractor
     (Agent 2 Phase 2). Its ``channels``/``num_blocks`` must match this model's.
+    ``device`` is "auto"/"cuda"/"cpu" (auto uses the GPU when available).
     """
     if env is None:
         env = SelfPlayEnv()
@@ -101,10 +105,36 @@ def build_model(
         policy_kwargs=policy_kwargs,
         seed=seed,
         verbose=verbose,
+        device=device,
     )
     if il_network is not None:
         transfer_il_weights(model, il_network)
     return model
+
+
+class PeriodicCheckpoint(BaseCallback):
+    """Overwrite a single checkpoint file every ``save_freq`` steps.
+
+    SB3 only saves at the end of ``learn()`` by default, so a long PPO run that
+    is interrupted (Colab disconnect, crash, power loss) loses everything. This
+    saves the model to one fixed path periodically, so a ``--resume`` can pick up
+    from the last save. One file (overwritten) keeps Google Drive tidy.
+    """
+
+    def __init__(self, save_path: str, save_freq: int, verbose: int = 1) -> None:
+        super().__init__(verbose)
+        self.save_path = save_path
+        self.save_freq = save_freq
+
+    def _on_step(self) -> bool:
+        if self.save_freq and self.n_calls % self.save_freq == 0:
+            self.model.save(self.save_path)
+            if self.verbose:
+                print(
+                    f"[checkpoint] {self.num_timesteps} steps -> {self.save_path}.zip",
+                    flush=True,
+                )
+        return True
 
 
 def train(
@@ -118,30 +148,61 @@ def train(
     seed: int | None = None,
     verbose: int = 1,
     il_checkpoint: str | None = None,
+    checkpoint_every: int = 0,
+    resume: bool = False,
+    device: str = "auto",
 ) -> MaskablePPO:
     """Train a PPO self-play agent and optionally save it.
 
-    Pass ``il_checkpoint`` to start from an imitation-learning checkpoint (Agent
-    2 Phase 2): its body is transferred into the features extractor. The
-    checkpoint must have been trained with the same ``channels``/``num_blocks``.
+    * ``il_checkpoint`` — start from an imitation-learning checkpoint (Agent 2
+      Phase 2): its body is transferred into the features extractor (must share
+      ``channels``/``num_blocks``). Ignored when resuming.
+    * ``checkpoint_every`` — also save every N steps during training (not just at
+      the end), so an interrupted run can resume. Recommended on Colab.
+    * ``resume`` — if ``save_path`` already exists, continue from it and train
+      ``total_timesteps`` MORE steps (otherwise start fresh).
+    * ``device`` — "auto"/"cuda"/"cpu" (auto picks the GPU if available).
     """
-    il_network = None
-    if il_checkpoint is not None:
-        from src.training.imitation import load_network
+    env = SelfPlayEnv()
+    zip_path = f"{save_path}.zip" if save_path else None
+    reset_num_timesteps = True
 
-        il_network = load_network(
-            il_checkpoint, channels=channels, num_blocks=num_blocks
+    if resume and zip_path and os.path.exists(zip_path):
+        model = MaskablePPO.load(save_path, env=env, device=device)
+        reset_num_timesteps = False
+        print(
+            f"resuming PPO from {zip_path} at {model.num_timesteps} steps",
+            flush=True,
         )
-    model = build_model(
-        channels=channels,
-        num_blocks=num_blocks,
-        n_steps=n_steps,
-        batch_size=batch_size,
-        seed=seed,
-        verbose=verbose,
-        il_network=il_network,
+    else:
+        il_network = None
+        if il_checkpoint is not None:
+            from src.training.imitation import load_network
+
+            il_network = load_network(
+                il_checkpoint, channels=channels, num_blocks=num_blocks
+            )
+        model = build_model(
+            env=env,
+            channels=channels,
+            num_blocks=num_blocks,
+            n_steps=n_steps,
+            batch_size=batch_size,
+            seed=seed,
+            verbose=verbose,
+            il_network=il_network,
+            device=device,
+        )
+
+    callback = None
+    if checkpoint_every and save_path is not None:
+        callback = PeriodicCheckpoint(save_path, checkpoint_every, verbose=verbose)
+
+    model.learn(
+        total_timesteps=total_timesteps,
+        reset_num_timesteps=reset_num_timesteps,
+        callback=callback,
     )
-    model.learn(total_timesteps=total_timesteps)
     if save_path is not None:
         model.save(save_path)
     return model
@@ -151,15 +212,34 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Train PPO self-play (Agent 1, or Agent 2 Phase 2 with --il-checkpoint)."
     )
-    parser.add_argument("--timesteps", type=int, default=100_000)
+    parser.add_argument("--timesteps", type=int, default=100_000,
+                        help="steps to train this run (added on top when --resume)")
     parser.add_argument("--save", type=str, default="results/checkpoints/ppo_agent1")
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument(
         "--il-checkpoint", type=str, default=None,
         help="IL checkpoint to initialise from (Agent 2 Phase 2)",
     )
+    parser.add_argument(
+        "--checkpoint-every", type=int, default=0,
+        help="also save every N steps during training (0 = only at the end). "
+             "Use on Colab so an interrupted run can resume, e.g. 10000.",
+    )
+    parser.add_argument(
+        "--resume", action="store_true",
+        help="continue from an existing --save checkpoint instead of starting fresh",
+    )
+    parser.add_argument("--device", default="auto", help="auto / cuda / cpu")
     args = parser.parse_args()
-    train(args.timesteps, args.save, seed=args.seed, il_checkpoint=args.il_checkpoint)
+    train(
+        args.timesteps,
+        args.save,
+        seed=args.seed,
+        il_checkpoint=args.il_checkpoint,
+        checkpoint_every=args.checkpoint_every,
+        resume=args.resume,
+        device=args.device,
+    )
 
 
 if __name__ == "__main__":
