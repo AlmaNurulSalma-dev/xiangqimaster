@@ -151,6 +151,7 @@ def train(
     checkpoint_every: int = 0,
     resume: bool = False,
     device: str = "auto",
+    log_dir: str | None = None,
 ) -> MaskablePPO:
     """Train a PPO self-play agent and optionally save it.
 
@@ -194,6 +195,14 @@ def train(
             device=device,
         )
 
+    if log_dir is not None:
+        # Write progress.csv + TensorBoard events (+ stdout) so training is
+        # provable: live graphs via `tensorboard --logdir`, and a CSV to plot
+        # publication figures from. Works for both fresh and resumed models.
+        from stable_baselines3.common.logger import configure
+
+        model.set_logger(configure(log_dir, ["stdout", "csv", "tensorboard"]))
+
     callback = None
     if checkpoint_every and save_path is not None:
         callback = PeriodicCheckpoint(save_path, checkpoint_every, verbose=verbose)
@@ -230,6 +239,11 @@ def main() -> None:
         help="continue from an existing --save checkpoint instead of starting fresh",
     )
     parser.add_argument("--device", default="auto", help="auto / cuda / cpu")
+    parser.add_argument(
+        "--log-dir", type=str, default=None,
+        help="write progress.csv + TensorBoard events here (live graphs via "
+             "`tensorboard --logdir <dir>`), e.g. results/tb/ppo_agent2",
+    )
     args = parser.parse_args()
     train(
         args.timesteps,
@@ -239,6 +253,7 @@ def main() -> None:
         checkpoint_every=args.checkpoint_every,
         resume=args.resume,
         device=args.device,
+        log_dir=args.log_dir,
     )
 
 
