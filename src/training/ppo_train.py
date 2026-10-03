@@ -176,12 +176,37 @@ def train(
     reset_num_timesteps = True
 
     if resume and zip_path and os.path.exists(zip_path):
-        model = MaskablePPO.load(save_path, env=env, device=device)
-        reset_num_timesteps = False
-        print(
-            f"resuming PPO from {zip_path} at {model.num_timesteps} steps",
-            flush=True,
-        )
+        try:
+            model = MaskablePPO.load(save_path, env=env, device=device)
+            reset_num_timesteps = False
+            print(
+                f"resuming PPO from {zip_path} at {model.num_timesteps} steps",
+                flush=True,
+            )
+        except Exception as exc:  # SB3 zip-read bug on some torch versions
+            import io
+            import zipfile
+
+            import torch
+
+            print(
+                f"MaskablePPO.load failed ({type(exc).__name__}); rebuilding and "
+                f"loading policy weights from {zip_path}",
+                flush=True,
+            )
+            model = build_model(
+                env=env, channels=channels, num_blocks=num_blocks,
+                n_steps=n_steps, batch_size=batch_size, seed=seed,
+                verbose=verbose, device=device,
+            )
+            policy_sd = torch.load(
+                io.BytesIO(zipfile.ZipFile(zip_path).read("policy.pth")),
+                map_location=device, weights_only=False,
+            )
+            model.policy.load_state_dict(policy_sd)
+            # Fresh optimizer/step counter; the policy weights carry the learned
+            # play, which is what matters for continuing.
+            reset_num_timesteps = True
     else:
         il_network = None
         if il_checkpoint is not None:
