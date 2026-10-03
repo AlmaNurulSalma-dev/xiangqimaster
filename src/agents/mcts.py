@@ -63,7 +63,8 @@ def _evaluate(
 ) -> tuple[dict[int, float], float]:
     """Return (priors over legal action indices, value) from the network."""
     observation = encoder.encode(board)
-    tensor = torch.from_numpy(observation).unsqueeze(0)
+    device = next(network.parameters()).device
+    tensor = torch.from_numpy(observation).unsqueeze(0).to(device)
     logits, value = network(tensor)
     logits = logits.squeeze(0).cpu().numpy()
 
