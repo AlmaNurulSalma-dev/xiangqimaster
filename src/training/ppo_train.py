@@ -152,6 +152,7 @@ def train(
     resume: bool = False,
     device: str = "auto",
     log_dir: str | None = None,
+    opponent: str = "random",
 ) -> MaskablePPO:
     """Train a PPO self-play agent and optionally save it.
 
@@ -163,6 +164,12 @@ def train(
     * ``resume`` — if ``save_path`` already exists, continue from it and train
       ``total_timesteps`` MORE steps (otherwise start fresh).
     * ``device`` — "auto"/"cuda"/"cpu" (auto picks the GPU if available).
+    * ``opponent`` — who the agent trains against in ``SelfPlayEnv``:
+      ``"random"`` (weak; the agent only learns to beat chance), ``"self"``
+      (true self-play vs the current, co-evolving policy — far stronger signal),
+      or ``"minimax[:D]"`` (vs the depth-D Minimax baseline). Training vs
+      ``"random"`` does not produce strong play, so ``"self"`` is the default
+      choice for a real run.
     """
     env = SelfPlayEnv()
     zip_path = f"{save_path}.zip" if save_path else None
@@ -194,6 +201,20 @@ def train(
             il_network=il_network,
             device=device,
         )
+
+    # Choose the self-play opponent (SelfPlayEnv defaults to RandomAgent). We set
+    # it on the held env instance, which is the same object the vec wrapper steps.
+    if opponent == "self":
+        from src.agents.ppo_agent import PPOAgent
+
+        env.opponent = PPOAgent(model, deterministic=True)  # co-evolving self
+    elif opponent.startswith("minimax"):
+        from src.agents.minimax_agent import MinimaxAgent
+
+        depth = int(opponent.split(":", 1)[1]) if ":" in opponent else 2
+        env.opponent = MinimaxAgent(depth=depth)
+    elif opponent != "random":
+        raise ValueError(f"unknown opponent {opponent!r}")
 
     if log_dir is not None:
         # Write progress.csv + TensorBoard events (+ stdout) so training is
@@ -286,6 +307,12 @@ def main() -> None:
         help="write progress.csv + TensorBoard events here (live graphs via "
              "`tensorboard --logdir <dir>`), e.g. results/tb/ppo_agent2",
     )
+    parser.add_argument(
+        "--opponent", default="random",
+        help="self-play opponent: random | self | minimax[:D]. 'self' = true "
+             "self-play vs the current policy (recommended for a real run); "
+             "'random' only teaches beating chance.",
+    )
     args = parser.parse_args()
     train(
         args.timesteps,
@@ -296,6 +323,7 @@ def main() -> None:
         resume=args.resume,
         device=args.device,
         log_dir=args.log_dir,
+        opponent=args.opponent,
     )
 
 
