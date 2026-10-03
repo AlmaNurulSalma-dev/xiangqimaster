@@ -217,6 +217,48 @@ def train(
     return model
 
 
+def load_ppo_agent(
+    path: str,
+    *,
+    channels: int = NN_CHANNEL_WIDTH,
+    num_blocks: int = NN_NUM_RES_BLOCKS,
+    device: str = "cpu",
+    name: str = "PPO",
+    deterministic: bool = True,
+):
+    """Load a trained PPO model as a :class:`PPOAgent`, robustly.
+
+    ``MaskablePPO.load`` can fail on some torch/SB3 combinations with a
+    ``PytorchStreamReader`` error while reading the zip's inner stream, even
+    though the weights are intact. In that case we fall back to rebuilding the
+    model (same ``channels``/``num_blocks``) and loading the policy ``state_dict``
+    read directly from the ``.zip`` — which works where the streaming reader
+    does not. The architecture must match what the checkpoint was trained with.
+    """
+    from src.agents.ppo_agent import PPOAgent
+
+    try:
+        model = MaskablePPO.load(path, device=device)
+        return PPOAgent(model, name=name, deterministic=deterministic)
+    except Exception:
+        import io
+        import zipfile
+
+        import torch
+
+        model = build_model(
+            env=SelfPlayEnv(), channels=channels, num_blocks=num_blocks,
+            device=device,
+        )
+        zip_path = path if path.endswith(".zip") else f"{path}.zip"
+        policy_sd = torch.load(
+            io.BytesIO(zipfile.ZipFile(zip_path).read("policy.pth")),
+            map_location=device, weights_only=False,
+        )
+        model.policy.load_state_dict(policy_sd)
+        return PPOAgent(model, name=name, deterministic=deterministic)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Train PPO self-play (Agent 1, or Agent 2 Phase 2 with --il-checkpoint)."

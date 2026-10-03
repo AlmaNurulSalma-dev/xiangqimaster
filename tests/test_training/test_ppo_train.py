@@ -14,7 +14,7 @@ from src.environment import action_space
 from src.environment.board import Board
 from src.environment.move_generator import generate_legal_moves
 from src.models.network import PolicyValueNetwork
-from src.training.ppo_train import build_model, train
+from src.training.ppo_train import build_model, load_ppo_agent, train
 
 
 def test_build_model_and_ppo_agent_plays_legally():
@@ -47,10 +47,28 @@ def test_transfer_il_weights_copies_the_body():
     # Agent 2 Phase 2: the IL body must land in the PPO features extractor.
     il = PolicyValueNetwork(channels=8, num_blocks=1)
     model = build_model(
-        channels=8, num_blocks=1, n_steps=64, batch_size=32, seed=0, il_network=il
+        channels=8, num_blocks=1, n_steps=64, batch_size=32, seed=0, il_network=il,
+        device="cpu",  # keep both on CPU so the comparison is device-agnostic
     )
     extractor = model.policy.features_extractor
     assert torch.allclose(
         extractor.input_conv.conv.weight.detach(),
         il.input_conv.conv.weight.detach(),
     )
+
+
+def test_load_ppo_agent_round_trips(tmp_path):
+    # Save a tiny model, then load it back as a playable agent (whichever load
+    # path works — robust loader falls back to a direct policy state_dict read).
+    from src.agents.base_agent import BaseAgent
+    from src.agents.ppo_agent import PPOAgent as _PPOAgent
+
+    model = build_model(channels=8, num_blocks=1, n_steps=64, batch_size=32, seed=0)
+    save_path = str(tmp_path / "ppo_tiny")
+    model.save(save_path)
+
+    agent = load_ppo_agent(save_path, channels=8, num_blocks=1, name="PPO_tiny")
+    assert isinstance(agent, (_PPOAgent, BaseAgent))
+    board = Board()
+    action = agent.select_move(board)
+    assert action_space.index_to_move(action) in set(generate_legal_moves(board))
