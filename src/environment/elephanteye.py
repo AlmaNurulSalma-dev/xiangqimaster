@@ -94,10 +94,16 @@ class ElephantEyeEngine:
         *,
         depth: int = 6,
         read_limit: int = 10_000,
+        protocol: str = "ucci",
+        cwd: str | None = None,
     ) -> None:
         self.command = [command] if isinstance(command, str) else list(command)
         self.depth = depth
         self.read_limit = read_limit
+        if protocol not in ("ucci", "uci"):
+            raise ValueError("protocol must be 'ucci' (ElephantEye) or 'uci' (Pikafish)")
+        self.protocol = protocol  # ElephantEye speaks UCCI; Pikafish speaks UCI
+        self.cwd = cwd  # engine working dir (lets Pikafish find pikafish.nnue)
         self.proc: subprocess.Popen | None = None
 
     def start(self) -> "ElephantEyeEngine":
@@ -107,9 +113,10 @@ class ElephantEyeEngine:
             stdout=subprocess.PIPE,
             text=True,
             bufsize=1,
+            cwd=self.cwd,
         )
-        self._send("ucci")
-        self._read_until("ucciok")
+        self._send(self.protocol)                 # "ucci" or "uci"
+        self._read_until(self.protocol + "ok")    # "ucciok" or "uciok"
         return self
 
     def bestmove(self, board: Board, *, depth: int | None = None) -> FullMove:
