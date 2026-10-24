@@ -61,3 +61,14 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# ─── Xiangqi engines (large binaries; re-downloadable) ────
+engines/
+
+# ─── Pikafish distillation data (large; reproducible via src/data/pikafish_selfplay.py) ───
+data/pikafish/
+data/pikafish_splits/*.jsonl
+
+# ─── Logs & TensorBoard (transient run output) ────────────
+results/logs/
+results/tb/
