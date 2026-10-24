@@ -1,0 +1,6 @@
+agent \ opponent,ILPPO_rand,IL_only,MCTS_a3,Minimax_d2,Random
+ILPPO_rand,,0.25,0.0,0.5,0.7
+IL_only,0.5,,0.0,0.5,0.85
+MCTS_a3,1.0,0.75,,0.5,0.925
+Minimax_d2,0.0,0.0,0.0,,0.75
+Random,0.15,0.0,0.0,0.0,

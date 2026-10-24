@@ -1,0 +1,7 @@
+agent,elo,elo_ci95,score,games
+Pikafish_d8,2061.8,218.1,0.975,100
+Distill_pika,1501.5,68.4,0.545,100
+IL_human,1489.5,68.2,0.53,100
+Minimax_d2,1473.7,68.1,0.51,100
+ILPPO_rand,1300.7,75.0,0.29,100
+Random,1172.8,95.4,0.15,100
