@@ -31,7 +31,9 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import json
 import os
+import pickle
 import time
 from collections import deque
 
@@ -57,6 +59,37 @@ from src.utils.config import (
 )
 
 Sample = tuple[np.ndarray, np.ndarray, np.float32]  # (state, policy_target, z)
+
+
+# --- resume-safety sidecars (keep the main .pt a pure state_dict for compat) ---
+
+def _buffer_path(save_path: str) -> str:
+    return save_path + ".buffer.pkl"
+
+
+def _meta_path(save_path: str) -> str:
+    return save_path + ".meta.json"
+
+
+def _best_path(save_path: str) -> str:
+    base, ext = os.path.splitext(save_path)
+    return base + ".best" + (ext or ".pt")
+
+
+def _save_buffer(buffer: "deque[Sample]", save_path: str) -> None:
+    """Persist the replay buffer next to the checkpoint so --resume is seamless."""
+    tmp = _buffer_path(save_path) + ".tmp"
+    with open(tmp, "wb") as fh:
+        pickle.dump(list(buffer), fh, protocol=pickle.HIGHEST_PROTOCOL)
+    os.replace(tmp, _buffer_path(save_path))  # atomic swap
+
+
+def _load_buffer(save_path: str, window: int) -> "deque[Sample]":
+    path = _buffer_path(save_path)
+    if os.path.exists(path):
+        with open(path, "rb") as fh:
+            return deque(pickle.load(fh), maxlen=window)
+    return deque(maxlen=window)
 
 
 @torch.no_grad()
@@ -186,6 +219,7 @@ def train_mcts(
     save_path: str | None = None,
     checkpoint_every: int = 1,
     resume: bool = False,
+    save_buffer: bool = True,
     device: str = "cuda",
     seed: int | None = None,
 ) -> PolicyValueNetwork:
@@ -215,9 +249,24 @@ def train_mcts(
     optimizer = torch.optim.AdamW(
         network.parameters(), lr=learning_rate, weight_decay=weight_decay
     )
-    buffer: deque[Sample] = deque(maxlen=window)
+
+    # Resume-safety: continue the replay buffer, global iteration count, and
+    # best-so-far value loss across runs instead of resetting them each time.
+    start_iter = 0
+    best_v = float("inf")
+    if resume and save_path:
+        buffer = _load_buffer(save_path, window) if save_buffer else deque(maxlen=window)
+        if os.path.exists(_meta_path(save_path)):
+            meta = json.load(open(_meta_path(save_path)))
+            start_iter = int(meta.get("global_iter", 0))
+            best_v = float(meta.get("best_v", float("inf")))
+        print(f"resume state: buffer {len(buffer)} | start_iter {start_iter} | "
+              f"best_v {best_v:.4f}", flush=True)
+    else:
+        buffer = deque(maxlen=window)
 
     for it in range(iterations):
+        global_it = start_iter + it
         t0 = time.time()
         network.eval()
         n_new = 0
@@ -238,14 +287,24 @@ def train_mcts(
             network, optimizer, list(buffer),
             epochs=epochs_per_iter, batch_size=batch_size, device=dev,
         )
+        is_best = v_loss < best_v
+        if is_best:
+            best_v = v_loss
         if save_path and (it + 1) % checkpoint_every == 0:
             save_checkpoint(network, save_path)
+            if is_best:
+                save_checkpoint(network, _best_path(save_path))  # never lose the best net
+            if save_buffer:
+                _save_buffer(buffer, save_path)
+            json.dump({"global_iter": global_it + 1, "best_v": best_v},
+                      open(_meta_path(save_path), "w"))
 
         print(
-            f"iter {it:>3}/{iterations} | games {games_per_iter} "
+            f"iter {global_it:>3} (run {it:>2}/{iterations}) | games {games_per_iter} "
             f"(R/B/D {wins.get(1,0)}/{wins.get(-1,0)}/{wins.get(None,0)}) | "
             f"new {n_new} | buffer {len(buffer)} | avg_len {np.mean(lengths):.0f} | "
-            f"p_loss {p_loss:.4f} | v_loss {v_loss:.4f} | {(time.time()-t0)/60:.1f} min",
+            f"p_loss {p_loss:.4f} | v_loss {v_loss:.4f}"
+            f"{'  <-- best' if is_best else ''} | {(time.time()-t0)/60:.1f} min",
             flush=True,
         )
 
@@ -271,6 +330,9 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--save", default="results/checkpoints/mcts_agent3.pt")
     p.add_argument("--checkpoint-every", type=int, default=1, help="iterations")
     p.add_argument("--resume", action="store_true")
+    p.add_argument("--no-save-buffer", action="store_true",
+                   help="don't persist the replay buffer sidecar (saves disk, "
+                        "but resume will reset the buffer)")
     p.add_argument("--device", default="cuda", help="cuda / cpu")
     p.add_argument("--seed", type=int, default=None)
     args = p.parse_args(argv)
@@ -291,6 +353,7 @@ def main(argv: list[str] | None = None) -> None:
         save_path=args.save or None,
         checkpoint_every=args.checkpoint_every,
         resume=args.resume,
+        save_buffer=not args.no_save_buffer,
         device=args.device,
         seed=args.seed,
     )
