@@ -96,6 +96,8 @@ class ElephantEyeEngine:
         read_limit: int = 10_000,
         protocol: str = "ucci",
         cwd: str | None = None,
+        threads: int | None = None,
+        hash_mb: int | None = None,
     ) -> None:
         self.command = [command] if isinstance(command, str) else list(command)
         self.depth = depth
@@ -104,6 +106,8 @@ class ElephantEyeEngine:
             raise ValueError("protocol must be 'ucci' (ElephantEye) or 'uci' (Pikafish)")
         self.protocol = protocol  # ElephantEye speaks UCCI; Pikafish speaks UCI
         self.cwd = cwd  # engine working dir (lets Pikafish find pikafish.nnue)
+        self.threads = threads  # CPU search threads (more = stronger per move)
+        self.hash_mb = hash_mb  # transposition-table size in MB
         self.proc: subprocess.Popen | None = None
 
     def start(self) -> "ElephantEyeEngine":
@@ -117,6 +121,10 @@ class ElephantEyeEngine:
         )
         self._send(self.protocol)                 # "ucci" or "uci"
         self._read_until(self.protocol + "ok")    # "ucciok" or "uciok"
+        if self.threads is not None:
+            self._send(f"setoption name Threads value {self.threads}")
+        if self.hash_mb is not None:
+            self._send(f"setoption name Hash value {self.hash_mb}")
         return self
 
     def bestmove(self, board: Board, *, depth: int | None = None) -> FullMove:
