@@ -27,8 +27,15 @@ from src.data.dataset import LazyXiangqiILDataset
 from src.data.data_loader import make_dataloader
 from src.data.pipeline import load_split_jsonl
 from src.data.wxf_parser import Game
+from src.models.network import PolicyValueNetwork
 from src.training.imitation import load_network, save_checkpoint, train_imitation
-from src.utils.config import IL_BATCH_SIZE, IL_EPOCHS, IL_LEARNING_RATE
+from src.utils.config import (
+    IL_BATCH_SIZE,
+    IL_EPOCHS,
+    IL_LEARNING_RATE,
+    NN_CHANNEL_WIDTH,
+    NN_NUM_RES_BLOCKS,
+)
 
 
 def _load_split(splits_dir: str, name: str, limit: int | None) -> list[Game]:
@@ -55,6 +62,8 @@ def train_from_splits(
     save_path: str | None = None,
     resume: bool = False,
     save_every: int = 0,
+    channels: int = NN_CHANNEL_WIDTH,
+    num_blocks: int = NN_NUM_RES_BLOCKS,
 ):
     """Load splits, build lazy datasets + loaders, and run imitation training.
 
@@ -85,11 +94,17 @@ def train_from_splits(
         val_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers
     )
 
-    # Resume from an existing checkpoint if asked (Colab restart).
+    # Resume from an existing checkpoint if asked (Colab restart), else build a
+    # fresh network at the requested size (channels/num_blocks let us scale up).
     network = None
     if resume and save_path is not None and os.path.isfile(save_path):
-        network = load_network(save_path, device=device)
+        network = load_network(save_path, channels=channels, num_blocks=num_blocks,
+                               device=device)
         print(f"resuming from {save_path}")
+    else:
+        network = PolicyValueNetwork(channels=channels, num_blocks=num_blocks)
+    n_params = sum(p.numel() for p in network.parameters())
+    print(f"network: C={channels} N={num_blocks} -> {n_params/1e6:.2f}M params")
 
     if save_path is not None:
         os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
@@ -155,6 +170,10 @@ def main(argv: list[str] | None = None) -> None:
              "(0 = only at epoch end). Use on Colab so a mid-epoch disconnect "
              "still saves, e.g. 500.",
     )
+    parser.add_argument("--channels", type=int, default=NN_CHANNEL_WIDTH,
+                        help="network body width C (bigger = more capacity)")
+    parser.add_argument("--num-blocks", type=int, default=NN_NUM_RES_BLOCKS,
+                        help="number of residual blocks N")
     args = parser.parse_args(argv)
 
     train_from_splits(
@@ -171,6 +190,8 @@ def main(argv: list[str] | None = None) -> None:
         save_path=args.save or None,
         resume=args.resume,
         save_every=args.save_every,
+        channels=args.channels,
+        num_blocks=args.num_blocks,
     )
 
 
