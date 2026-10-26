@@ -1,0 +1,6 @@
+agent,elo,elo_ci95,score,games
+Minimax_d2,1584.5,78.6,0.625,80
+Distill_big,1572.8,77.9,0.606,80
+IL_human,1561.1,77.3,0.588,80
+Distill_small,1530.2,76.4,0.537,80
+Random,1251.3,108.5,0.144,80
