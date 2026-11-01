@@ -27,7 +27,13 @@
 
 ---
 
-## B. Issues flagged for your decision (not changed)
+## B. Issues flagged for your decision
+
+**Implementation status (updated 2026-11-01):** **B1** and **B3** are now
+**applied** to the proposal (see the notes on each below). B2 and B7 the audit
+recommends leaving as they are; B6 is already documented in `proposal/README.md`;
+B4 and B5 are thesis-stage or scope notes, not proposal-text edits. Nothing
+further is therefore pending on the proposal itself.
 
 **B1 — Preliminary Elo table uses the 5-iteration MCTS (1703).** *(Minor.)*
 Your own `results/AGENT3_MCTS_FINDING.md` records that this early checkpoint has a
@@ -35,7 +41,9 @@ wide CI and that a later, *stabilised* run (MCTS v2) measured **1691**. Both are
 defensible; 1703 is the documented headline. **Recommendation:** keep 1703 (the
 table is explicitly labelled "preliminary, CI-wide"), but be ready in the defence
 to explain the 5-iter vs v2 story — reviewers may probe it. Optionally switch the
-table to the v2 number (1691) as the more conservative figure.
+table to the v2 number (1691) as the more conservative figure. **Update —
+applied:** the table caption now cites the stabilised rerun (MCTS ≈1691) beside
+the 1703 headline, so both are visible to the reader.
 
 **B2 — `xiangqir1` (LLM/GRPO) is the weakest citation.** *(Minor.)*
 It is tangential to a four-*paradigm* comparison (it is a reasoning-LLM paper).
@@ -47,7 +55,8 @@ cut if you ever need space or tighter focus.
 The abstract says preliminary runs span "11.6M positions"; 11.6M is the *whole*
 dataset, while the *training* split is 9.3M (the manifest's figures). Not wrong,
 but loose. **Recommendation:** either say "≈11.6M positions (9.3M in the training
-split)" or just "9.3M training positions" for precision.
+split)" or just "9.3M training positions" for precision. **Update — applied:**
+the abstract now reads "a 9.3M-position training split from 141k human games."
 
 **B4 — Reproducibility seam (for the eventual thesis, not this proposal).**
 *(Major for the thesis; N/A for Lab 8.)* Per the audit (`01` §10, §13), several

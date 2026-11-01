@@ -59,8 +59,9 @@ policy--value network, and one Elo scale, so the paradigm is the only variable.
 We will rank the agents by fitted Elo with 95\% confidence intervals, quantify
 the imitation$\rightarrow$RL effect, and run a four-lever ablation (search,
 epochs, teacher, network size) to identify the binding constraint. A complete,
-tested implementation and preliminary runs over 11.6M positions from 141k human
-games already exist, making the study a rigorous formalisation rather than a
+tested implementation and preliminary runs over a 9.3M-position training split
+from 141k human games already exist, making the study a rigorous formalisation
+rather than a
 speculative build. The expected contributions are a reusable multi-agent
 evaluation framework, to our knowledge the first controlled paradigm comparison
 for Xiangqi under constraint, and reproducibility guidance for self-play RL.
@@ -324,7 +325,8 @@ results.
 
 \begin{table}[t]
 \caption{Preliminary feasibility measurements (relative Elo, anchor 1500).
-These motivate the hypotheses; the proposed study tightens and extends them.}
+These motivate the hypotheses; the proposed study tightens and extends them. A
+stabilised rerun reproduced the same top rank (MCTS $\approx$1691).}
 \label{tab:prelim}
 \centering
 \footnotesize
