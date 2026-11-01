@@ -1,0 +1,16 @@
+# LaTeX build intermediates — regenerated on every compile. Keep only the
+# source (main.tex, references.bib) and the camera-ready final_proposal.pdf.
+*.aux
+*.log
+*.bbl
+*.blg
+*.out
+*.xdv
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+# Raw compiler output (we commit final_proposal.pdf, not the working main.pdf)
+main.pdf

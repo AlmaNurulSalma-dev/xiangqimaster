@@ -1,0 +1,3 @@
+# Figure assets for the proposal.
+# The system-architecture figure (Fig. 1) is drawn inline with TikZ in main.tex,
+# so no external image file is required for the proposal to compile.

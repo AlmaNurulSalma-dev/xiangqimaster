@@ -1,0 +1,338 @@
+%% ===========================================================================
+%% Lab 8 — Capstone Research Proposal (IEEE two-column conference format)
+%% "Search, Imitation, or Reinforcement? A Controlled, Elo-Anchored Comparison
+%%  of Deep Learning Paradigms for Xiangqi under a Constrained Compute Budget"
+%%
+%% Compile:  pdflatex main  ->  bibtex main  ->  pdflatex main  ->  pdflatex main
+%% (or: latexmk -pdf main   /   tectonic main.tex)
+%% Target: 4 pages maximum, including references.
+%% ===========================================================================
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{fontspec}
+\setmainfont{texgyretermes}[
+  Extension = .otf,
+  UprightFont = *-regular,
+  BoldFont = *-bold,
+  ItalicFont = *-italic,
+  BoldItalicFont = *-bolditalic ]
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
+\usepackage[hidelinks]{hyperref}
+
+\begin{document}
+
+\title{Search, Imitation, or Reinforcement? A Controlled, Elo-Anchored
+Comparison of Deep Learning Paradigms for Xiangqi under a Constrained Compute
+Budget}
+
+\author{%
+\IEEEauthorblockN{Alma Nurul Salma}
+\IEEEauthorblockA{Dual-Degree Programme\\
+Universitas Islam Indonesia (UII) $\times$ Ningxia University (NXU)\\
+Student ID: L25020007\\
+Email: almanurulsalma@gmail.com}
+}
+
+\maketitle
+
+\begin{abstract}
+Modern game-playing agents are built from three ideas validated on Go and chess
+at cluster scale: imitation of human experts, reinforcement learning (RL) by
+self-play, and tree search over a learned network. It is unknown which of these
+paradigms is worth its cost for \emph{Xiangqi} (Chinese Chess) on the single
+consumer GPU most researchers and students actually use, whether imitation
+pretraining still helps the subsequent RL under that budget, and what factor
+ultimately bounds playing strength. Existing Xiangqi deep-RL work consists of a
+few single-system papers and provides no controlled, like-for-like comparison.
+We propose a controlled, equal-compute study that places four paradigms
+---classical alpha--beta search, pure-self-play Proximal Policy Optimization
+(PPO), imitation-initialised PPO, and AlphaZero-style Monte~Carlo Tree Search
+(MCTS)---on a single shared Xiangqi engine, a fixed 2086-move action space, one
+policy--value network, and one Elo scale, so the paradigm is the only variable.
+We will rank the agents by fitted Elo with 95\% confidence intervals, quantify
+the imitation$\rightarrow$RL effect, and run a four-lever ablation (search,
+epochs, teacher, network size) to identify the binding constraint. A complete,
+tested implementation and preliminary runs over 11.6M positions from 141k human
+games already exist, making the study a rigorous formalisation rather than a
+speculative build. The expected contributions are a reusable multi-agent
+evaluation framework, the first controlled paradigm comparison for Xiangqi under
+constraint, and reproducibility guidance for self-play RL.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Xiangqi, Chinese Chess, deep reinforcement learning, Monte Carlo tree search,
+imitation learning, proximal policy optimization, Elo rating, empirical software
+engineering, reproducibility.
+\end{IEEEkeywords}
+
+\section{Introduction}
+\IEEEPARstart{T}{he} dominant recipe for superhuman board-game play was
+established on Go by AlphaGo, which combined supervised (imitation) learning of
+expert moves, RL by self-play, and Monte~Carlo Tree Search (MCTS)
+\cite{silver2016}. AlphaGo~Zero removed the human-data stage and learned
+\emph{tabula rasa} \cite{silver2017}, and AlphaZero generalised the same
+algorithm to chess, shogi, and Go, replacing alpha--beta search with
+general MCTS \cite{silver2018}. These landmark results share two properties that
+limit their guidance for most practitioners: they were obtained on large
+tensor-processing clusters, and each reports a single successful pipeline rather
+than a controlled comparison of the paradigms it combines.
+
+\textbf{Motivation and problem.} For a researcher, student, or practitioner
+working on a \emph{single consumer GPU}, the practical questions are unanswered,
+especially for \emph{Xiangqi} (Chinese Chess)---a culturally major but
+academically under-served game with a larger $10\times9$ board, higher branching
+than chess, a cannon that captures by jumping a screen, and the unusual rule
+that \emph{stalemate is a loss}. The published deep-RL work on Xiangqi is recent
+and sparse: an AlphaZero-style MCTS player \cite{yilmaz2025}, a population method
+that tackles strategic non-transitivity \cite{li2023jiangjun}, and a
+language-model approach trained with policy optimization \cite{xiangqir1}. Each
+builds \emph{one} maximally strong system; none measures, under a fixed budget,
+how the distinct learning paradigms compare, whether imitation pretraining helps
+the ensuing RL, or which factor limits strength.
+
+\textbf{Significance.} Deep-RL results are known to be fragile and hard to
+reproduce when reported from single runs without variance analysis
+\cite{henderson2018}. A controlled, confidence-interval-backed comparison on one
+rule engine therefore yields decision-relevant, reproducible evidence that
+cluster-scale, single-system papers do not.
+
+\textbf{Objectives and contributions.} We will (i) rank four paradigms on a
+common Xiangqi Elo scale under matched compute; (ii) quantify the signed effect
+of imitation pretraining on subsequent PPO; and (iii) identify, through a
+single-variable ablation, whether search, model capacity, training data, or the
+learning algorithm binds strength. The contributions are: a reusable
+single-interface \emph{multi-agent evaluation league} for heterogeneous
+game-playing paradigms runnable on one GPU; the first controlled, equal-budget,
+Elo-anchored paradigm comparison for Xiangqi, including negative results; and
+concrete reproducibility guidance for self-play RL.
+
+\section{Related Work}
+\textbf{Deep RL with search.} The AlphaGo family established the
+imitation$\rightarrow$RL and search-over-network levers we compare
+\cite{silver2016,silver2017,silver2018}; MCTS itself is surveyed comprehensively
+by Browne \textit{et al.} \cite{browne2012}, whose PUCT family our search agent
+implements. Classical Xiangqi engines instead use alpha--beta search with
+handcrafted evaluation, the tradition our Minimax baseline represents.
+
+\textbf{Policy gradients and reproducibility.} PPO \cite{schulman2017} is our
+RL optimizer, chosen for stability; yet Henderson \textit{et al.}
+\cite{henderson2018} show policy-gradient results vary sharply with seeds and
+implementation, motivating our interval-based evaluation and a training-stability
+analysis.
+
+\textbf{Populations and evaluation.} AlphaStar extended self-play to a league of
+adapting agents rated on an Elo ladder \cite{vinyals2019}; we adopt that framing
+for a league of \emph{heterogeneous} agents. For Xiangqi, JiangJun combines MCTS
+with Policy-Space Response Oracles to address non-transitivity, analysing
+$>$10{,}000 human games \cite{li2023jiangjun}---a reminder that single
+head-to-head results can mislead and that round-robins with fitted Elo are
+needed.
+
+\textbf{Xiangqi-specific deep RL.} The directly comparable systems
+\cite{yilmaz2025,li2023jiangjun,xiangqir1} each optimise one pipeline at either
+cluster scale or without cross-paradigm comparison. Table~\ref{tab:gap}
+summarises the resulting gap.
+
+\begin{table}[t]
+\caption{Where prior work leaves the gap this study fills.}
+\label{tab:gap}
+\centering
+\footnotesize
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Work & Xiangqi & Cross-paradigm & Constrained \\
+     &         & comparison     & GPU budget  \\
+\midrule
+AlphaGo family \cite{silver2016,silver2017,silver2018} & no & no & no \\
+MCTS survey \cite{browne2012}        & n/a & n/a & n/a \\
+PPO \cite{schulman2017}              & no  & partial & no \\
+RL reproducibility \cite{henderson2018} & no & no & yes \\
+AlphaStar \cite{vinyals2019}         & no  & no  & no \\
+JiangJun \cite{li2023jiangjun}       & yes & no  & no \\
+Yilmaz \textit{et al.} \cite{yilmaz2025} & yes & no & partial \\
+Xiangqi-R1 \cite{xiangqir1}          & yes & no  & partial \\
+\textbf{This study}                  & \textbf{yes} & \textbf{yes} & \textbf{yes} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\textbf{Research gap.} No controlled, equal-compute, Elo-anchored comparison of
+classical search, pure PPO, imitation+PPO, and AlphaZero-style MCTS exists for
+Xiangqi under a single-GPU budget; consequently the direction of the
+imitation$\rightarrow$RL effect and the binding constraint on strength are both
+unquantified for this game at this scale. This is primarily an
+\emph{evaluation/methodological} gap, with secondary \emph{performance} and
+\emph{application} dimensions.
+
+\section{Proposed Methodology}
+\textbf{Design.} A controlled comparative study: the independent variable is the
+paradigm (or the one ablated lever); the dependent variable is Elo; everything
+else is fixed by a shared stack (Fig.~\ref{fig:arch}), so differences in
+strength are attributable to the decision function alone.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  box/.style={draw,rounded corners,align=center,inner sep=3pt,minimum height=6mm},
+  core/.style={box,fill=black!5},
+  agent/.style={box,fill=black!3,minimum width=14mm},
+  >=Latex,node distance=2.2mm and 3mm]
+% shared core
+\node[core,minimum width=66mm] (env) {Shared Xiangqi engine: rules, legal moves,
+ 2086-action space, $14{\times}10{\times}9$ encoder};
+\node[core,minimum width=66mm,above=of env] (net) {Shared policy--value network
+ (conv $\to$ $N$ residual blocks $\to$ policy$_{2086}$ + value)};
+% agents row
+\node[agent,above=5mm of net.north west,anchor=south west,xshift=0mm] (a4) {Minimax\\$\alpha$--$\beta$};
+\node[agent,right=of a4] (a1) {PPO\\scratch};
+\node[agent,right=of a1] (a2) {IL$\to$PPO};
+\node[agent,right=of a2] (a3) {MCTS\\+net};
+% evaluation
+\node[core,minimum width=66mm,above=8mm of a1.north west,anchor=south west,xshift=-1mm] (eval)
+ {Evaluation league: colour-balanced round-robin $\to$ fitted Elo + 95\% CI,\\
+  Pikafish absolute anchor, head-to-head matrix};
+% arrows
+\draw[->] (env) -- (net);
+\draw[->] (net.north) -- ++(0,3mm) -| (a4);
+\draw[->] (net.north) -- ++(0,3mm) -| (a1);
+\draw[->] (net.north) -- ++(0,3mm) -| (a2);
+\draw[->] (net.north) -- ++(0,3mm) -| (a3);
+\draw[->] (a4) -- (a4|-eval.south);
+\draw[->] (a3) -- (a3|-eval.south);
+\end{tikzpicture}
+\caption{The controlled apparatus. One environment, one action space, and one
+network are shared by all four agents; only the decision function changes, and
+all agents are rated on one Elo scale.}
+\label{fig:arch}
+\end{figure}
+
+\textbf{Shared components.} (1) A tested Xiangqi rule engine exposed through a
+Gymnasium interface, with a fixed 2086-move action space and legal masking, and a
+$14\times10\times9$ side-to-move-relative board encoding. (2) One AlphaZero-style
+policy--value network reused by imitation, PPO (actor and critic), and MCTS
+(priors and leaf value); its width/depth are configurable for the ablation.
+
+\textbf{The four agents.} \emph{Minimax}: alpha--beta (negamax) search with a
+material evaluation. \emph{PPO-scratch}: masked PPO self-play from random
+initialisation. \emph{IL$\rightarrow$PPO}: supervised imitation of 113k human
+games, then masked PPO refinement from that checkpoint. \emph{MCTS+net}: PUCT
+search over the network with value-head leaf evaluation, selecting moves by
+visit count. A Random agent is included as a floor.
+
+\textbf{Data.} 141{,}356 legal human games ($\approx$11.6M positions) are split
+at the game level into 113k/14k/14k train/validation/test sets, recorded in a
+committed manifest for reproducibility; an engine self-play corpus supports the
+distillation lever.
+
+\textbf{Procedure.} Each RL paradigm is trained to a matched single-GPU budget
+with periodic checkpointing. \emph{Experiment~1 (RQ1)} runs a colour-balanced
+round-robin among all four agents plus Random and fits Elo with 95\% confidence
+intervals \eqref{eq:elo} and a head-to-head matrix. \emph{Experiment~2 (RQ2)}
+isolates imitation-only, IL$\rightarrow$PPO, and PPO-scratch and reports the
+signed Elo deltas plus learning proxies (imitation top-1 accuracy; PPO reward and
+value traces). \emph{Experiment~3 (RQ3)} varies one lever at a time---MCTS
+simulations $\in\{100,200,400,800\}$, imitation epochs, teacher (human vs.\
+engine distillation), and network size ($1.15$M vs.\ $4.85$M parameters)---each
+re-entered into the round-robin, reporting each lever's Elo effect. A stability
+study compares fragmented, continuous, and replay-buffer-persisted training.
+
+\textbf{Evaluation metrics.} The expected score of a rating difference is
+\begin{equation}
+\label{eq:elo}
+E_A = \frac{1}{1 + 10^{(R_B - R_A)/400}},
+\end{equation}
+inverted and fitted over round-robin results to obtain each agent's rating;
+confidence intervals follow the delta method. Reported metrics are fitted and
+absolute Elo (with 95\% CI), head-to-head win rates, the signed
+imitation$\rightarrow$RL Elo delta, per-lever Elo effects, top-1 move accuracy,
+value-loss trajectories, and GPU-hour cost. Differences are called significant
+only when confidence intervals do not overlap; non-transitivity is handled by
+full round-robins and fitted Elo rather than single matches \cite{li2023jiangjun}.
+Fixed seeds, the committed manifest, and per-run config/seed/commit logging
+address known reproducibility pitfalls \cite{henderson2018}.
+
+\textbf{Threats to validity.} Relative Elo depends on the agent pool; we mitigate
+this with an absolute Pikafish anchor and full round-robins rather than single
+matches. Few games per pair widen confidence intervals, so the decisive
+comparisons will be rerun with more games until their intervals separate.
+Findings are scoped to one game, one network family, and one GPU class, and we
+claim no automatic generalisation beyond that setting; the shared-stack design
+nonetheless keeps the comparison internally valid, since only the decision
+function varies between measured agents.
+
+\section{Expected Results and Contributions}
+\textbf{Expected outcomes.} We hypothesise that (H1) AlphaZero-style MCTS attains
+the highest Elo; (H2) imitation pretraining raises \emph{starting} strength but,
+under the constrained budget, PPO self-play does \emph{not} raise the ceiling and
+may lower it; and (H3) model capacity/data---not search depth or the learning
+algorithm---binds strength. Preliminary runs on the existing implementation are
+consistent with all three and establish feasibility (Table~\ref{tab:prelim});
+these are \emph{preliminary, confidence-interval-wide} measurements that the
+proposed study will formalise with more games and tighter intervals, not final
+results.
+
+\begin{table}[t]
+\caption{Preliminary feasibility measurements (relative Elo, anchor 1500).
+These motivate the hypotheses; the proposed study tightens and extends them.}
+\label{tab:prelim}
+\centering
+\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Agent & Elo (prelim.) & 95\% CI \\
+\midrule
+MCTS + net (AlphaZero-style) & 1703 & $\pm$94 \\
+Imitation-only               & 1557 & $\pm$77 \\
+Minimax ($d{=}2$)            & 1541 & $\pm$77 \\
+Imitation $\rightarrow$ PPO  & 1411 & $\pm$79 \\
+Random                       & 1287 & $\pm$96 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Contributions.} (1) \emph{Technical}: a reusable, single-interface
+multi-agent evaluation league for comparing heterogeneous game-playing paradigms
+on one rule engine, runnable on a single consumer GPU. (2) \emph{Research}: the
+first controlled, equal-budget, Elo-anchored comparison of classical search, PPO,
+imitation+PPO, and AlphaZero-style MCTS for Xiangqi; a quantified answer to
+whether imitation pretraining helps RL under constraint; and a multi-lever
+capacity-bottleneck analysis. (3) \emph{Software engineering}: evidence that
+training-stability engineering---replay-buffer continuity and best-checkpoint
+selection---materially affects learned-model quality, yielding actionable
+reproducibility guidance for self-play RL. \emph{Practical implication}:
+practitioners gain budget-aware guidance on which paradigm is worth its compute.
+
+\textbf{Work plan.} The environment, shared network, four agents, and evaluation
+harness are implemented and unit-tested, and preliminary runs already exist
+(Table~\ref{tab:prelim}); the remaining work is (A) finalising matched-budget
+training of all four agents, (B) scaling Experiment~1 to tighter confidence
+intervals and adding the absolute Pikafish anchor, (C) completing the four-lever
+ablation and the training-stability study, and (D) statistical analysis and
+write-up. Because the measurement apparatus already exists, the residual risk is
+dominated by compute time rather than by feasibility.
+
+\section{Conclusion}
+We have proposed a controlled, Elo-anchored comparison of four deep-learning
+paradigms for Xiangqi under a constrained compute budget, built on a shared
+environment, action space, and network so that only the decision function varies.
+The study answers which paradigm is strongest, whether imitation pretraining
+helps subsequent RL, and what factor bounds strength---questions left open by a
+Xiangqi literature of single, mostly cluster-scale systems. Because a complete,
+tested implementation and preliminary results already exist, the work is a
+rigorous, reproducible formalisation whose contributions---a reusable comparison
+framework, the first constrained-budget paradigm comparison for Xiangqi, and
+training-stability guidance---are defensible and honestly scoped, including where
+the evidence is negative.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
