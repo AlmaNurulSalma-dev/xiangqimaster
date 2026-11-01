@@ -9,17 +9,19 @@
 
 ## 5.1 Research Title
 
-**Primary (used in the paper, two lines):**
-> **A Controlled Comparison of Deep-Learning Paradigms
-> for Xiangqi under a Constrained Compute Budget**
+**Primary (used in the paper — two lines: main title + scope subtitle):**
+> **Comparing Deep-Learning Paradigms for Xiangqi (象棋):
+> A Controlled Study under a Constrained Compute Budget**
 
-Rationale: it names the *contribution* (a controlled comparison), the *method
-context* (deep-learning paradigms, set against the classical baseline), the
-*domain* (Xiangqi), and the *distinguishing condition* (a constrained compute
-budget) — satisfying the brief's rule against generic "development of a Xiangqi
-app" titles, while fitting cleanly onto two title lines. The heterogeneous agents
-competing on one Elo ladder constitute the **multi-agent evaluation league**
-framing.
+Rationale (checked against the standard criteria for a strong research title —
+*predicts the content, concise, specific, keyword-rich, comprehensible, and free
+of abbreviations*, with a colon subtitle carrying the scope): the main clause
+names the *topic* (comparing deep-learning paradigms) and *domain* (Xiangqi, with
+its hanzi 象棋); the subtitle gives the *method/scope* (a controlled study under a
+constrained compute budget). It avoids method abbreviations and the generic
+"development of a Xiangqi app" phrasing, and fits two title lines. The
+heterogeneous agents competing on one Elo ladder constitute the **multi-agent
+evaluation league** framing.
 
 ---
 

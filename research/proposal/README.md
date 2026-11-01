@@ -3,8 +3,8 @@
 Camera-ready 4-page Software Engineering research proposal for **Lab 8**, built
 on the `xiangqimaster` project.
 
-**Title:** *A Controlled Comparison of Deep-Learning Paradigms for Xiangqi under
-a Constrained Compute Budget.*
+**Title:** *Comparing Deep-Learning Paradigms for Xiangqi (象棋): A Controlled
+Study under a Constrained Compute Budget.*
 
 ## Files
 | File | Purpose |
