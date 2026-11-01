@@ -21,11 +21,12 @@ space, network, and Elo scale.
 | `proposal/` | The IEEE two-column LaTeX proposal and its compiled PDF. |
 | `proposal/main.tex` | Proposal source (IEEEtran `conference`). |
 | `proposal/references.bib` | 10 verified BibTeX references. |
-| `proposal/final_proposal.pdf` | **Camera-ready compiled PDF** (3 pp., within the 4-page limit). |
+| `proposal/final_proposal.pdf` | **Camera-ready compiled PDF** (4 pp., within the 4-page limit). |
 | `proposal/README.md` | How to compile (pdfLaTeX / latexmk / Tectonic / Overleaf). |
 | `04_elevator_pitch.md` | 3-minute pitch: script, 6-slide outline, timing, hooks. |
 | `05_technical_defense.md` | 20+ Q&A (categories A–E) + 5 challenging questions + 5 weaknesses + 2-min strategy. |
 | `06_peer_review_template.md` | Reusable ICSE-style peer-review template. |
+| `07_quality_audit.md` | Senior quality audit: fixed defects, flagged items, and the pre-submission action list. |
 | `peer_reviews/` | Where the two completed peer reviews go (stubs await classmates' proposals + the official rubric). |
 
 ## Status checklist
@@ -37,6 +38,7 @@ space, network, and Elo scale.
 - [x] Phase 6 — Elevator pitch (`04_elevator_pitch.md`)
 - [x] Phase 7 — Technical defense (`05_technical_defense.md`)
 - [x] Phase 8 — Peer-review template (`06_peer_review_template.md`)
+- [x] Quality audit — fixed defects + flagged items (`07_quality_audit.md`)
 - [ ] Peer reviews — completed after classmates' proposals + official rubric are provided
 - [ ] Slides — build from `04_elevator_pitch.md` (6 slides)
 

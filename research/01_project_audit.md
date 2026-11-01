@@ -21,8 +21,8 @@ XiangqiMaster (象棋大师) is a **final thesis project** that conducts a
 whose purpose is to *train several categories of game-playing agent on the same
 environment and measure their relative playing strength on a common Elo scale.*
 
-- **Author:** Alma (student ID `L25020007`), dual-degree UII × NXU
-  (`README.md:6`).
+- **Author:** Alma Nurul Salma (诺艾玛), student ID `L25020007`, Nanjing
+  Xiaozhuang University (NXU, 南京晓庄学院).
 - **Central thesis framing** (`README.md:3`): "A Comparative Study of Deep
   Reinforcement Learning Approaches for Xiangqi — From Imitation Learning to
   Self-Play Mastery."

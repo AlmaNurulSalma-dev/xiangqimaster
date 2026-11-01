@@ -9,16 +9,17 @@
 
 ## 5.1 Research Title
 
-**Primary (used in the paper):**
-> **Search, Imitation, or Reinforcement? A Controlled, Elo-Anchored Comparison
-> of Deep Learning Paradigms for Xiangqi under a Constrained Compute Budget**
+**Primary (used in the paper, two lines):**
+> **A Controlled Comparison of Deep-Learning Paradigms
+> for Xiangqi under a Constrained Compute Budget**
 
 Rationale: it names the *contribution* (a controlled comparison), the *method
-context* (the three paradigm families + classical search), the *domain*
-(Xiangqi), the *evaluation instrument* (Elo), and the *distinguishing condition*
-(constrained compute) — satisfying the brief's rule against generic
-"development of a Xiangqi app" titles. The heterogeneous agents competing on one
-Elo ladder constitute the **multi-agent evaluation league** framing.
+context* (deep-learning paradigms, set against the classical baseline), the
+*domain* (Xiangqi), and the *distinguishing condition* (a constrained compute
+budget) — satisfying the brief's rule against generic "development of a Xiangqi
+app" titles, while fitting cleanly onto two title lines. The heterogeneous agents
+competing on one Elo ladder constitute the **multi-agent evaluation league**
+framing.
 
 ---
 

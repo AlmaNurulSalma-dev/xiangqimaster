@@ -14,3 +14,6 @@
 *.synctex.gz
 # Raw compiler output (we commit final_proposal.pdf, not the working main.pdf)
 main.pdf
+# CJK font copied locally for the build (OFL Noto Serif SC, ~24 MB) — not committed.
+# See README.md for the Overleaf alternative (load a Noto CJK font by name instead).
+*.ttf
