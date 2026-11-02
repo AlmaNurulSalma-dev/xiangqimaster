@@ -27,7 +27,7 @@ XiangqiMaster is a final thesis research project that designs, trains, and compa
 
 ## 📚 Documentation Map — Which File Do I Read?
 
-This project's documentation is split into 13 focused files. **Do not guess — use this table to route to the correct document.**
+This project's documentation is split into 14 focused files. **Do not guess — use this table to route to the correct document.**
 
 | If the task involves... | Read this document |
 |---|---|
@@ -44,6 +44,7 @@ This project's documentation is split into 13 focused files. **Do not guess — 
 | Building the Streamlit dashboard and its visualizations | **10-DASHBOARD.md** |
 | Naming conventions, file structure, docstrings, testing rules | **11-CODING-STANDARDS.md** |
 | The meaning of any RL, Xiangqi, or technical term | **12-GLOSSARY.md** |
+| The actual development & training history — commands run, runs, results, errors & fixes | **13-WORKLOG.md** |
 
 ---
 
