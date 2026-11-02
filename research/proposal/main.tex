@@ -248,7 +248,28 @@ Gymnasium interface, with a fixed 2086-move action space and legal masking, and 
 $14\times10\times9$ side-to-move-relative board encoding. (2) One AlphaZero-style
 policy--value network reused by imitation, by Proximal Policy Optimization (as
 actor and critic), and by Monte Carlo Tree Search (as priors and leaf value); its
-width and depth are configurable for the ablation.
+width and depth are configurable for the ablation (Fig.~\ref{fig:tensor}).
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=0.9, >=Latex, font=\scriptsize]
+  \foreach \i/\c in {0/8,1/14,2/20,3/26,4/32,5/38,6/44} {
+    \pgfmathsetmacro\x{\i*0.16}
+    \draw[fill=blue!\c!white, draw=black!55] (\x,\x) rectangle (\x+1.5,\x+1.75);
+  }
+  \node[align=center] at (2.75,2.35) {\textbf{14} planes\\$10\times9$ each};
+  \draw[->] (2.95,1.2) -- (3.95,1.2);
+  \begin{scope}[shift={(4.15,0.25)}]
+    \draw[step=0.2,black!35] (0,0) grid (1.8,2.0);
+    \draw (0,0) rectangle (1.8,2.0);
+    \node[below,align=center] at (0.9,-0.05) {one plane\\(e.g.\ Red cannons)};
+  \end{scope}
+\end{tikzpicture}
+\caption{The board is encoded as a $14\times10\times9$ tensor---one $10\times9$
+binary plane per piece type and side, from the side-to-move's perspective, shared
+by every agent.}
+\label{fig:tensor}
+\end{figure}
 
 \textbf{The four agents.} \emph{Minimax}: alpha--beta (negamax) search with a
 material evaluation. \emph{From-scratch Proximal Policy Optimization}:
@@ -332,31 +353,28 @@ strength but, under the constrained budget, self-play reinforcement learning doe
 \emph{not} raise the ceiling and may lower it; and (H3) model capacity and
 training data---not search depth or the learning algorithm---bind strength.
 Preliminary runs on the existing implementation are consistent with all three and
-establish feasibility (Table~\ref{tab:prelim}); these are \emph{preliminary,
+establish feasibility (Figs.~\ref{fig:elo} and~\ref{fig:h2h}); these are \emph{preliminary,
 confidence-interval-wide} measurements that the proposed study will formalise with
 more games and tighter intervals, not final results.
 
-\begin{table}[t]
-\caption{Preliminary feasibility measurements (relative Elo, anchor 1500). These
-motivate the hypotheses; the proposed study tightens and extends them. A
-stabilised rerun reproduced the same top rank (Monte Carlo Tree Search
-$\approx$1691).}
-\label{tab:prelim}
+\begin{figure}[t]
 \centering
-\footnotesize
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}lcc@{}}
-\toprule
-Agent & Elo (prelim.) & 95\% CI \\
-\midrule
-Monte Carlo Tree Search + network (AlphaZero-style) & 1703 & $\pm$94 \\
-Imitation-only                                       & 1557 & $\pm$77 \\
-Minimax ($d{=}2$)                                    & 1541 & $\pm$77 \\
-Imitation then Proximal Policy Optimization          & 1411 & $\pm$79 \\
-Random                                               & 1287 & $\pm$96 \\
-\bottomrule
-\end{tabular}}
-\end{table}
+\includegraphics[width=0.92\columnwidth]{figures/elo_bars.png}
+\caption{Preliminary feasibility measurements: fitted relative Elo (anchor 1500)
+with 95\% confidence intervals from a round-robin of the four paradigms plus a
+random agent. A stabilised rerun reproduced the same top rank (Monte Carlo Tree
+Search $\approx$1691).}
+\label{fig:elo}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.80\columnwidth]{figures/headtohead.png}
+\caption{Preliminary head-to-head win rates (row agent vs.\ column opponent). The
+Monte Carlo Tree Search agent dominates its column; the ladder is largely
+transitive, with many draws under the 300-ply cap.}
+\label{fig:h2h}
+\end{figure}
 
 \textbf{Contributions.} (1) \emph{Technical}: a reusable, single-interface
 multi-agent evaluation league for comparing heterogeneous game-playing paradigms
