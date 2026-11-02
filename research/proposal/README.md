@@ -4,8 +4,8 @@ Camera-ready 4-page Software Engineering research proposal for **Lab 8**, built
 on the `xiangqimaster` project.
 
 **Title:** *Benchmarking Minimax Search, Imitation of Human Play, Self-Play
-Reinforcement Learning, and Monte Carlo Tree Search over Policy-Value Networks in
-a Multi-Agent League for Xiangqi (象棋).*
+Reinforcement Learning, and Monte Carlo Tree Search over Policy-Value Networks to
+Identify the Strongest Paradigm in a Multi-Agent Xiangqi (象棋) League.*
 
 ## Files
 | File | Purpose |

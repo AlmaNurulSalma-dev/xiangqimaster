@@ -12,7 +12,7 @@
 **Primary (used in the paper):**
 > **Benchmarking Minimax Search, Imitation of Human Play, Self-Play
 > Reinforcement Learning, and Monte Carlo Tree Search over Policy-Value
-> Networks in a Multi-Agent League for Xiangqi (象棋)**
+> Networks to Identify the Strongest Paradigm in a Multi-Agent Xiangqi (象棋) League**
 
 Rationale: the title names all four agent paradigms the study benchmarks (Minimax
 search; imitation of human play; self-play reinforcement learning; and Monte Carlo
