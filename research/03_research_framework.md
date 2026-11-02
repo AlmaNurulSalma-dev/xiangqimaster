@@ -9,19 +9,18 @@
 
 ## 5.1 Research Title
 
-**Primary (used in the paper — two lines: main title + scope subtitle):**
-> **Comparing Deep-Learning Paradigms for Xiangqi (象棋):
-> A Controlled Study under a Constrained Compute Budget**
+**Primary (used in the paper):**
+> **Benchmarking Minimax Search, Imitation of Human Play, Self-Play
+> Reinforcement Learning, and Monte Carlo Tree Search over Policy-Value
+> Networks in a Multi-Agent League for Xiangqi (象棋)**
 
-Rationale (checked against the standard criteria for a strong research title —
-*predicts the content, concise, specific, keyword-rich, comprehensible, and free
-of abbreviations*, with a colon subtitle carrying the scope): the main clause
-names the *topic* (comparing deep-learning paradigms) and *domain* (Xiangqi, with
-its hanzi 象棋); the subtitle gives the *method/scope* (a controlled study under a
-constrained compute budget). It avoids method abbreviations and the generic
-"development of a Xiangqi app" phrasing, and fits two title lines. The
-heterogeneous agents competing on one Elo ladder constitute the **multi-agent
-evaluation league** framing.
+Rationale: the title names all four agent paradigms the study benchmarks (Minimax
+search; imitation of human play; self-play reinforcement learning; and Monte Carlo
+Tree Search over the shared policy-value network), frames them as a **multi-agent
+league** rated on one Elo scale, and fixes the domain as Xiangqi (象棋). It uses
+only standard field vocabulary ("benchmarking", "self-play", "policy-value
+networks", "Monte Carlo Tree Search"), contains no abbreviations and no colon, and
+reflects the actual content of the proposal.
 
 ---
 

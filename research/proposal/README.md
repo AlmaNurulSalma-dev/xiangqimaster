@@ -3,8 +3,9 @@
 Camera-ready 4-page Software Engineering research proposal for **Lab 8**, built
 on the `xiangqimaster` project.
 
-**Title:** *Comparing Deep-Learning Paradigms for Xiangqi (象棋): A Controlled
-Study under a Constrained Compute Budget.*
+**Title:** *Benchmarking Minimax Search, Imitation of Human Play, Self-Play
+Reinforcement Learning, and Monte Carlo Tree Search over Policy-Value Networks in
+a Multi-Agent League for Xiangqi (象棋).*
 
 ## Files
 | File | Purpose |
