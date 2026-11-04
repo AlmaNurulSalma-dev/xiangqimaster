@@ -62,8 +62,13 @@ def available_agents() -> list[str]:
 AGENT_NAMES: list[str] = available_agents()
 
 
-def make_agent(name: str) -> BaseAgent:
-    """Instantiate an agent by its display name."""
+def make_agent(name: str, *, mcts_sims: int = 100) -> BaseAgent:
+    """Instantiate an agent by its display name.
+
+    ``mcts_sims`` sets the MCTS agent's search width; the simulation ablation
+    showed strength is nearly flat in this count, so the demo can use fewer for
+    a big speed-up without materially weakening the agent.
+    """
     if name == "Random":
         return RandomAgent()
     if name.startswith("Minimax d"):
@@ -79,11 +84,38 @@ def make_agent(name: str) -> BaseAgent:
         if name == "MCTS v2":
             from src.agents.mcts_agent import MCTSAgent
 
-            return MCTSAgent(net, n_simulations=100, name="MCTS v2")
+            return MCTSAgent(net, n_simulations=mcts_sims, name="MCTS v2")
         from src.agents.neural_agent import NeuralAgent
 
         return NeuralAgent(net, name=name, device="cpu")
     raise ValueError(f"unknown agent: {name!r}")
 
 
-__all__ = ["AGENT_NAMES", "available_agents", "make_agent"]
+def pikafish_available() -> bool:
+    """True when the Pikafish engine binary is present (for the advantage bar)."""
+    return os.path.exists(_PIKA_EXE)
+
+
+def pikafish_engine():
+    """The shared Pikafish subprocess (started on first use), reused for eval."""
+    return _pikafish_engine()
+
+
+def value_net_checkpoint() -> str | None:
+    """A policy–value checkpoint to drive the advantage bar when Pikafish is
+    absent — prefer the human-imitation net, then distillation, then MCTS."""
+    for key in ("IL (human)", "Distill (Pikafish)", "MCTS v2"):
+        path = _CKPTS[key]
+        if os.path.exists(path):
+            return path
+    return None
+
+
+__all__ = [
+    "AGENT_NAMES",
+    "available_agents",
+    "make_agent",
+    "pikafish_available",
+    "pikafish_engine",
+    "value_net_checkpoint",
+]

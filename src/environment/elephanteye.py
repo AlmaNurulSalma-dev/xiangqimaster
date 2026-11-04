@@ -134,6 +134,40 @@ class ElephantEyeEngine:
         line = self._read_until("bestmove")
         return ucci_to_move(line.split()[1])
 
+    def evaluate(self, board: Board, *, depth: int | None = None) -> tuple[int, bool]:
+        """Return ``(score_cp, is_mate)`` for ``board`` from the side-to-move's
+        perspective.
+
+        Parses the engine's ``info ... score cp/mate`` lines (the last one before
+        ``bestmove`` is the final evaluation); a ``mate`` score is mapped to a
+        large signed centipawn magnitude. For an advantage/eval meter, not play.
+        """
+        assert self.proc is not None and self.proc.stdout is not None
+        self._send(f"position fen {board_to_fen(board)}")
+        self._send(f"go depth {depth or self.depth}")
+        score_cp = 0
+        is_mate = False
+        for _ in range(self.read_limit):
+            line = self.proc.stdout.readline()
+            if line == "":  # engine exited unexpectedly
+                raise RuntimeError("engine ended before 'bestmove'")
+            text = line.strip()
+            if text.startswith("info") and " score " in text:
+                toks = text.split()
+                try:
+                    i = toks.index("score")
+                    kind, value = toks[i + 1], int(toks[i + 2])
+                except (ValueError, IndexError):
+                    continue
+                if kind == "cp":
+                    score_cp, is_mate = value, False
+                elif kind == "mate":  # plies to mate → large signed cp
+                    score_cp = 30000 - abs(value) if value >= 0 else -(30000 - abs(value))
+                    is_mate = True
+            elif text.startswith("bestmove"):
+                break
+        return score_cp, is_mate
+
     def close(self) -> None:
         if self.proc is None:
             return

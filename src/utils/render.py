@@ -69,8 +69,17 @@ def _grid_shapes() -> list[dict]:
     return shapes
 
 
-def board_to_plotly(board: Board, title: str | None = None) -> go.Figure:
-    """Render ``board`` as an interactive Plotly figure."""
+def board_to_plotly(
+    board: Board,
+    title: str | None = None,
+    last_move: tuple[int, int, int, int] | None = None,
+) -> go.Figure:
+    """Render ``board`` as an interactive Plotly figure.
+
+    If ``last_move`` (``from_row, from_col, to_row, to_col``) is given, the origin
+    square is ringed in amber and the destination in green, with a connecting
+    arrow — so viewers can see what just moved.
+    """
     fig = go.Figure()
 
     for color, name, disc in ((RED, "Red", _RED_COLOR), (-RED, "Black", _BLACK_COLOR)):
@@ -88,9 +97,24 @@ def board_to_plotly(board: Board, title: str | None = None) -> go.Figure:
             )
         )
 
+    shapes = _grid_shapes()
+    annotations = []
+    if last_move is not None:
+        from_row, from_col, to_row, to_col = last_move
+        for (ry, rx, ring) in ((from_row, from_col, "#f1c40f"), (to_row, to_col, "#27ae60")):
+            shapes.append(dict(type="circle", xref="x", yref="y",
+                               x0=rx - 0.46, y0=ry - 0.46, x1=rx + 0.46, y1=ry + 0.46,
+                               line=dict(color=ring, width=4)))
+        annotations.append(dict(
+            x=to_col, y=to_row, ax=from_col, ay=from_row,
+            xref="x", yref="y", axref="x", ayref="y",
+            showarrow=True, arrowhead=3, arrowsize=1.4, arrowwidth=3,
+            arrowcolor="#27ae60", opacity=0.9, text=""))
+
     fig.update_layout(
         title=title,
-        shapes=_grid_shapes(),
+        shapes=shapes,
+        annotations=annotations,
         xaxis=dict(range=[-0.5, BOARD_COLS - 0.5], showgrid=False,
                    zeroline=False, visible=False),
         yaxis=dict(range=[-0.5, BOARD_ROWS - 0.5], showgrid=False, zeroline=False,

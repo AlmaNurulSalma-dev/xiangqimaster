@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="508" height="624" viewBox="0 0 508 624" font-family="Segoe UI, Arial, sans-serif">
+<rect width="508" height="624" fill="#ffffff"/>
+<defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1e293b"/></marker><marker id="ag" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#16a34a"/></marker><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#dc2626"/></marker></defs>
+<line x1="46.0" y1="504.0" x2="462.0" y2="504.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="46.0" y1="452.0" x2="462.0" y2="452.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="46.0" y1="400.0" x2="462.0" y2="400.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="46.0" y1="348.0" x2="462.0" y2="348.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="46.0" y1="296.0" x2="462.0" y2="296.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="46.0" y1="244.0" x2="462.0" y2="244.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="46.0" y1="192.0" x2="462.0" y2="192.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="46.0" y1="140.0" x2="462.0" y2="140.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="46.0" y1="88.0" x2="462.0" y2="88.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="46.0" y1="36.0" x2="462.0" y2="36.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="46.0" y1="504.0" x2="46.0" y2="36.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="98.0" y1="504.0" x2="98.0" y2="296.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="98.0" y1="244.0" x2="98.0" y2="36.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="150.0" y1="504.0" x2="150.0" y2="296.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="150.0" y1="244.0" x2="150.0" y2="36.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="202.0" y1="504.0" x2="202.0" y2="296.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="202.0" y1="244.0" x2="202.0" y2="36.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="254.0" y1="504.0" x2="254.0" y2="296.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="254.0" y1="244.0" x2="254.0" y2="36.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="306.0" y1="504.0" x2="306.0" y2="296.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="306.0" y1="244.0" x2="306.0" y2="36.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="358.0" y1="504.0" x2="358.0" y2="296.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="358.0" y1="244.0" x2="358.0" y2="36.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="410.0" y1="504.0" x2="410.0" y2="296.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="410.0" y1="244.0" x2="410.0" y2="36.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="462.0" y1="504.0" x2="462.0" y2="36.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="202.0" y1="504.0" x2="306.0" y2="400.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="306.0" y1="504.0" x2="202.0" y2="400.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="202.0" y1="140.0" x2="306.0" y2="36.0" stroke="#1e293b" stroke-width="1.5"/>
+<line x1="306.0" y1="140.0" x2="202.0" y2="36.0" stroke="#1e293b" stroke-width="1.5"/>
+<text x="254.0" y="270.0" font-size="21" fill="#94a3b8" text-anchor="middle" font-weight="bold" dominant-baseline="middle">River</text>
+<circle cx="46.0" cy="504.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="46.0" y="505.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">R</text>
+<circle cx="46.0" cy="36.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="46.0" y="37.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">R</text>
+<circle cx="98.0" cy="504.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="98.0" y="505.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">H</text>
+<circle cx="98.0" cy="36.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="98.0" y="37.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">H</text>
+<circle cx="150.0" cy="504.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="150.0" y="505.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">E</text>
+<circle cx="150.0" cy="36.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="150.0" y="37.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">E</text>
+<circle cx="202.0" cy="504.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="202.0" y="505.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">A</text>
+<circle cx="202.0" cy="36.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="202.0" y="37.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">A</text>
+<circle cx="254.0" cy="504.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="254.0" y="505.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">G</text>
+<circle cx="254.0" cy="36.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="254.0" y="37.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">G</text>
+<circle cx="306.0" cy="504.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="306.0" y="505.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">A</text>
+<circle cx="306.0" cy="36.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="306.0" y="37.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">A</text>
+<circle cx="358.0" cy="504.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="358.0" y="505.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">E</text>
+<circle cx="358.0" cy="36.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="358.0" y="37.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">E</text>
+<circle cx="410.0" cy="504.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="410.0" y="505.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">H</text>
+<circle cx="410.0" cy="36.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="410.0" y="37.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">H</text>
+<circle cx="462.0" cy="504.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="462.0" y="505.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">R</text>
+<circle cx="462.0" cy="36.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="462.0" y="37.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">R</text>
+<circle cx="98.0" cy="400.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="98.0" y="401.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">C</text>
+<circle cx="98.0" cy="140.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="98.0" y="141.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">C</text>
+<circle cx="410.0" cy="400.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="410.0" y="401.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">C</text>
+<circle cx="410.0" cy="140.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="410.0" y="141.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">C</text>
+<circle cx="46.0" cy="348.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="46.0" y="349.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">S</text>
+<circle cx="46.0" cy="192.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="46.0" y="193.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">S</text>
+<circle cx="150.0" cy="348.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="150.0" y="349.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">S</text>
+<circle cx="150.0" cy="192.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="150.0" y="193.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">S</text>
+<circle cx="254.0" cy="348.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="254.0" y="349.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">S</text>
+<circle cx="254.0" cy="192.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="254.0" y="193.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">S</text>
+<circle cx="358.0" cy="348.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="358.0" y="349.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">S</text>
+<circle cx="358.0" cy="192.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="358.0" y="193.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">S</text>
+<circle cx="462.0" cy="348.0" r="20" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="462.0" y="349.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">S</text>
+<circle cx="462.0" cy="192.0" r="20" fill="#334155" stroke="#ffffff" stroke-width="2"/>
+<text x="462.0" y="193.0" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">S</text>
+<text x="46.0" y="528.0" font-size="12" fill="#1e293b" text-anchor="start" font-weight="normal" dominant-baseline="middle">Red (bottom) vs Black (top). Pieces sit on intersections; 9 files x 10 ranks.</text>
+<circle cx="57.0" cy="556.0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="57.0" y="557.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">G</text>
+<text x="72.0" y="556.0" font-size="12" fill="#1e293b" text-anchor="start" font-weight="normal" dominant-baseline="middle">General</text>
+<circle cx="161.0" cy="556.0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="161.0" y="557.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">A</text>
+<text x="176.0" y="556.0" font-size="12" fill="#1e293b" text-anchor="start" font-weight="normal" dominant-baseline="middle">Advisor</text>
+<circle cx="265.0" cy="556.0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="265.0" y="557.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">E</text>
+<text x="280.0" y="556.0" font-size="12" fill="#1e293b" text-anchor="start" font-weight="normal" dominant-baseline="middle">Elephant</text>
+<circle cx="369.0" cy="556.0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="369.0" y="557.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">H</text>
+<text x="384.0" y="556.0" font-size="12" fill="#1e293b" text-anchor="start" font-weight="normal" dominant-baseline="middle">Horse</text>
+<circle cx="57.0" cy="582.0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="57.0" y="583.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">R</text>
+<text x="72.0" y="582.0" font-size="12" fill="#1e293b" text-anchor="start" font-weight="normal" dominant-baseline="middle">Chariot</text>
+<circle cx="161.0" cy="582.0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="161.0" y="583.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">C</text>
+<text x="176.0" y="582.0" font-size="12" fill="#1e293b" text-anchor="start" font-weight="normal" dominant-baseline="middle">Cannon</text>
+<circle cx="265.0" cy="582.0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+<text x="265.0" y="583.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="bold" dominant-baseline="middle">S</text>
+<text x="280.0" y="582.0" font-size="12" fill="#1e293b" text-anchor="start" font-weight="normal" dominant-baseline="middle">Soldier</text>
+</svg>

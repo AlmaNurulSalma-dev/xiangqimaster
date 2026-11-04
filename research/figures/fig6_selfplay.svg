@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="300" viewBox="0 0 560 300" font-family="Segoe UI, Arial, sans-serif">
+<rect width="560" height="300" fill="#ffffff"/>
+<defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1e293b"/></marker><marker id="ag" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#16a34a"/></marker><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#dc2626"/></marker></defs>
+<text x="280.0" y="24.0" font-size="15" fill="#1e293b" text-anchor="middle" font-weight="bold" dominant-baseline="middle">Self-play training loop (AlphaZero-style)</text>
+<rect x="202.0" y="41" width="156" height="48" rx="8" fill="#ecfeff" stroke="#0d9488" stroke-width="1.6"/>
+<text x="280.0" y="59.0" font-size="12" fill="#1e293b" text-anchor="middle" font-weight="normal" dominant-baseline="middle">self-play games</text>
+<text x="280.0" y="75.0" font-size="12" fill="#1e293b" text-anchor="middle" font-weight="normal" dominant-baseline="middle">(MCTS)</text>
+<rect x="297.0" y="136" width="156" height="48" rx="8" fill="#ecfeff" stroke="#0d9488" stroke-width="1.6"/>
+<text x="375.0" y="154.0" font-size="12" fill="#1e293b" text-anchor="middle" font-weight="normal" dominant-baseline="middle">data:</text>
+<text x="375.0" y="170.0" font-size="12" fill="#1e293b" text-anchor="middle" font-weight="normal" dominant-baseline="middle">state, policy, outcome</text>
+<rect x="202.0" y="231" width="156" height="48" rx="8" fill="#ecfeff" stroke="#0d9488" stroke-width="1.6"/>
+<text x="280.0" y="249.0" font-size="12" fill="#1e293b" text-anchor="middle" font-weight="normal" dominant-baseline="middle">train the</text>
+<text x="280.0" y="265.0" font-size="12" fill="#1e293b" text-anchor="middle" font-weight="normal" dominant-baseline="middle">policy-value network</text>
+<rect x="107.0" y="136" width="156" height="48" rx="8" fill="#ecfeff" stroke="#0d9488" stroke-width="1.6"/>
+<text x="185.0" y="154.0" font-size="12" fill="#1e293b" text-anchor="middle" font-weight="normal" dominant-baseline="middle">a stronger</text>
+<text x="185.0" y="170.0" font-size="12" fill="#1e293b" text-anchor="middle" font-weight="normal" dominant-baseline="middle">network</text>
+<line x1="340.8" y1="86.2" x2="314.2" y2="138.8" stroke="#0d9488" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="314.2" y1="181.2" x2="340.8" y2="233.8" stroke="#0d9488" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="219.2" y1="233.8" x2="245.8" y2="181.2" stroke="#0d9488" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="245.8" y1="138.8" x2="219.2" y2="86.2" stroke="#0d9488" stroke-width="2" marker-end="url(#ah)"/>
+</svg>
