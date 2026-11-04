@@ -10,9 +10,9 @@
 <style>
   :root{
     --bg:#0e1117; --panel:#161b22; --panel2:#1c232c; --line:#2a2f37;
-    --ink:#e6edf3; --muted:#8b949e; --board:#eaca84; --boardline:#6b4a21;
+    --ink:#e6edf3; --muted:#8b949e;
     --red:#e23b2e; --redsoft:#ff7a68; --blue:#4a90d9; --bluesoft:#7fb4e8;
-    --accent:#f0b429; --ok:#2ea043;
+    --accent:#f0b429; --ok:#2ea043; --board:#d9a24a; --boardline:#17100a;
     --serif:"Noto Serif SC","Songti SC","STSong","SimSun","Microsoft YaHei",serif;
   }
   *{box-sizing:border-box}
@@ -33,59 +33,56 @@
     border:1px solid var(--line);display:flex;flex-direction:column-reverse}
   .evalbar .red{background:linear-gradient(var(--redsoft),var(--red));height:50%;transition:height .35s ease}
   .evalbar .tick{position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.5)}
-  /* premium sandalwood board with an engraved frame */
-  .boardbox{position:relative;height:min(60vh,540px);aspect-ratio:9/10;border-radius:16px;
-    padding:7.2%;
+  /* honey-amber lacquered board with a thick bevelled frame */
+  .boardbox{position:relative;height:min(60vh,540px);aspect-ratio:9/10;border-radius:10px;
+    padding:8.4%;
     background:
-      /* soft directional sheen */
-      radial-gradient(120% 90% at 30% 10%,rgba(255,247,224,.55),rgba(255,247,224,0) 55%),
-      /* fine wood grain */
-      repeating-linear-gradient(94deg,rgba(120,80,30,.07) 0 3px,rgba(120,80,30,0) 3px 7px),
-      repeating-linear-gradient(90deg,rgba(90,58,20,.10) 0 1px,rgba(90,58,20,0) 1px 9px),
-      /* base wood tone */
-      linear-gradient(150deg,#e9c585 0%,#e0b86f 45%,#d7aa5e 100%);
+      radial-gradient(130% 100% at 30% 8%,rgba(255,238,202,.42),rgba(255,238,202,0) 55%),
+      repeating-linear-gradient(90deg,rgba(90,55,15,.05) 0 2px,rgba(90,55,15,0) 2px 11px),
+      linear-gradient(150deg,#e3b05e 0%,#d59a3f 52%,#c6882d 100%);
     box-shadow:
-      0 22px 50px rgba(0,0,0,.55),
-      0 4px 14px rgba(0,0,0,.4),
-      inset 0 0 0 3px #a9824a,
-      inset 0 0 0 5px #caa468,
-      inset 0 2px 10px rgba(255,255,255,.35),
-      inset 0 -8px 22px rgba(90,58,20,.30);}
-  /* inner playing field, slightly recessed */
-  .grid{position:absolute;inset:7.2%;border-radius:5px;
-    box-shadow:inset 0 0 0 1px rgba(120,80,30,.35),inset 0 0 26px rgba(120,80,30,.18);}
+      0 28px 56px rgba(0,0,0,.6),0 6px 16px rgba(0,0,0,.42),
+      inset 0 3px 7px rgba(255,241,212,.55),
+      inset 0 -16px 34px rgba(120,70,20,.45),
+      inset 0 0 0 2px rgba(90,55,15,.30);}
+  /* recessed flat playing field, slightly darker than the raised frame */
+  .grid{position:absolute;inset:8.4%;border-radius:3px;
+    background:linear-gradient(150deg,#d89f46,#cb9035);
+    box-shadow:
+      inset 0 0 0 1px rgba(60,38,12,.45),
+      inset 0 3px 8px rgba(80,48,12,.38),
+      0 1px 0 rgba(255,241,212,.5);}
   .grid svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
   .river{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
-    display:flex;justify-content:space-between;align-items:center;padding:0 6%;
-    font-family:var(--serif);font-weight:600;font-size:clamp(13px,3.1vmin,26px);
-    letter-spacing:.5em;color:rgba(90,58,20,.55);pointer-events:none;user-select:none;
-    text-shadow:0 1px 0 rgba(255,255,255,.4)}
+    display:flex;justify-content:space-between;align-items:center;padding:0 7%;
+    font-family:var(--serif);font-weight:700;font-size:clamp(14px,3.3vmin,28px);
+    letter-spacing:.35em;color:rgba(20,13,6,.80);pointer-events:none;user-select:none}
 
-  .piece{position:absolute;width:10.6%;aspect-ratio:1;transform:translate(-50%,-50%);
+  /* thick ebony-wood disc; the two sides differ only by the carved colour */
+  .piece{position:absolute;width:10.8%;aspect-ratio:1;transform:translate(-50%,-50%);
     border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-family:var(--serif);font-weight:700;font-size:clamp(13px,3.4vmin,27px);
-    line-height:1;user-select:none;z-index:2}
-  .piece::before{content:"";position:absolute;inset:11%;border-radius:50%;
-    border:1.5px solid currentColor;opacity:.55}
+    font-family:var(--serif);font-weight:900;font-size:clamp(13px,3.6vmin,29px);
+    line-height:1;user-select:none;z-index:2;
+    background:
+      radial-gradient(circle at 50% 118%,rgba(0,0,0,.45),rgba(0,0,0,0) 58%),
+      radial-gradient(circle at 38% 30%,#574a3f 0%,#3a2f26 46%,#241b14 74%,#150e09 100%);
+    box-shadow:
+      inset 0 2px 3px rgba(255,236,205,.22),
+      inset 0 -6px 11px rgba(0,0,0,.6),
+      0 4px 0 #120c07,
+      0 6px 3px rgba(0,0,0,.35),
+      0 11px 15px rgba(0,0,0,.5);}
+  /* incised rim near the edge */
+  .piece::before{content:"";position:absolute;inset:9%;border-radius:50%;
+    border:1px solid rgba(0,0,0,.5);box-shadow:inset 0 1px 1px rgba(255,236,205,.14)}
+  /* soft top sheen */
   .piece::after{content:"";position:absolute;inset:0;border-radius:50%;
-    background:radial-gradient(circle at 34% 26%,rgba(255,255,255,.55),rgba(255,255,255,0) 42%);
+    background:radial-gradient(circle at 36% 22%,rgba(255,240,215,.26),rgba(255,240,215,0) 46%);
     pointer-events:none}
-  /* cinnabar-lacquer Red disc */
-  .piece.red{color:#b11d12;
-    background:radial-gradient(circle at 36% 28%,#fbe6c9 0%,#f3d2a3 34%,#e7b878 70%,#caa468 100%);
-    box-shadow:
-      inset 0 2px 3px rgba(255,255,255,.75),
-      inset 0 -5px 9px rgba(120,80,30,.45),
-      0 4px 8px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.4)}
-  /* cool pale-jade Black disc (clearly distinct from Red's warm gold) */
-  .piece.black{color:#123a56;
-    background:radial-gradient(circle at 36% 28%,#eef4f1 0%,#d8e6df 34%,#bcd0c7 70%,#9fb8ad 100%);
-    box-shadow:
-      inset 0 2px 3px rgba(255,255,255,.8),
-      inset 0 -5px 9px rgba(40,70,60,.40),
-      0 4px 8px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.4)}
-  .piece.red::before{border-color:#b11d12}
-  .piece.black::before{border-color:#13324e}
+  /* Red side — carved cinnabar red */
+  .piece.red{color:#d8291b;text-shadow:0 1px 1px rgba(0,0,0,.7),0 0 2px rgba(216,41,27,.45)}
+  /* opposing side — carved gold */
+  .piece.black{color:#e8bd43;text-shadow:0 1px 1px rgba(0,0,0,.72),0 0 2px rgba(232,189,67,.4)}
   .ring{position:absolute;width:11.8%;aspect-ratio:1;transform:translate(-50%,-50%);
     border-radius:50%;border:3px solid var(--accent);pointer-events:none;opacity:0;transition:opacity .2s;z-index:1}
   .ring.to{border-color:var(--ok);box-shadow:0 0 12px rgba(46,160,67,.6)}
@@ -206,30 +203,19 @@ function buildGrid(){
   svg.setAttribute('viewBox','0 0 8 9'); svg.setAttribute('preserveAspectRatio','none');
   const line=(x1,y1,x2,y2,w,col)=>{const l=document.createElementNS(ns,'line');
     l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);
-    l.setAttribute('stroke',col||'var(--boardline)');l.setAttribute('stroke-width',w||.045);
+    l.setAttribute('stroke',col||'var(--boardline)');l.setAttribute('stroke-width',w||.05);
     l.setAttribute('stroke-linecap','round');svg.appendChild(l);};
   // inner grid
   for(let r=0;r<ROWS;r++) line(0,r,8,r);
   for(let c=0;c<COLS;c++){ if(c===0||c===8) line(c,0,c,9); else {line(c,0,c,4);line(c,5,c,9);} }
   // palace diagonals
   line(3,0,5,2);line(5,0,3,2);line(3,7,5,9);line(5,7,3,9);
-  // bold engraved border framing the playing field
+  // outer border framing the playing field
   const rect=document.createElementNS(ns,'rect');
-  rect.setAttribute('x',-0.14);rect.setAttribute('y',-0.14);
-  rect.setAttribute('width',8.28);rect.setAttribute('height',9.28);
+  rect.setAttribute('x',-0.16);rect.setAttribute('y',-0.16);
+  rect.setAttribute('width',8.32);rect.setAttribute('height',9.32);
   rect.setAttribute('fill','none');rect.setAttribute('stroke','var(--boardline)');
-  rect.setAttribute('stroke-width',.07);svg.appendChild(rect);
-  // traditional point-markers (small right-angle brackets)
-  const star=(c,r)=>{const g=0.12,d=0.34;
-    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sy])=>{
-      if((c===0&&sx<0)||(c===8&&sx>0)) return;      // skip off-board side
-      line(c+sx*g, r+sy*g, c+sx*(g+d), r+sy*g, .05);  // horizontal arm (y flipped below)
-      line(c+sx*g, r+sy*g, c+sx*g, r+sy*(g+d), .05);  // vertical arm
-    });};
-  // SVG y grows downward; our rows count up — draw at svg row = 9-r
-  const S=r=>9-r;
-  [0,2,4,6,8].forEach(c=>{ star(c,S(3)); star(c,S(6)); });   // soldiers
-  [1,7].forEach(c=>{ star(c,S(2)); star(c,S(7)); });         // cannons
+  rect.setAttribute('stroke-width',.06);svg.appendChild(rect);
   grid.appendChild(svg);
 }
 const xpct=c=>c/(COLS-1)*100, ypct=r=>(ROWS-1-r)/(ROWS-1)*100;
