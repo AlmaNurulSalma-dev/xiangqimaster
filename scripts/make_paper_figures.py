@@ -518,3 +518,42 @@ if __name__ == "__main__":
     f_arch(); f_m1(); f_m2(); f_m3(); f_m4(); f_pipeline()
     f_elo_main(); f_elo_engine(); f_accuracy()
     f_abl_search(); f_abl_capacity(); f_compute(); f_timeline()
+
+
+# ================================= apparatus (column-width, proposal) =====
+def f_apparatus():
+    fig, ax = plt.subplots(figsize=(3.30, 3.30)); blank(ax)
+    ax.add_patch(Rectangle((0.02, 0.600), 0.96, 0.375, fc="#fafafa", ec=BK,
+                           lw=0.9, zorder=1))
+    ax.text(0.50, 0.942, "Shared substrate   (identical for every agent)",
+            ha="center", va="center", fontsize=6.5, fontweight="bold")
+    items = [(0.845, "Tested rule engine, legal-move generation"),
+             (0.780, "Fixed action space: 2,086 moves + legality mask"),
+             (0.715, "Encoder: 14 x 10 x 9, side-to-move relative"),
+             (0.650, "Policy-value network (C = 64, N = 10)")]
+    for y, t in items:
+        box(ax, 0.055, y - 0.024, 0.89, 0.050, t, fc=WHITE, fs=5.9)
+    arr(ax, (0.50, 0.600), (0.50, 0.558), lw=0.9)
+    ax.text(0.50, 0.527, "decision function  —  the only variable",
+            ha="center", va="center", fontsize=6.2, style="italic")
+    xs = [0.025, 0.270, 0.515, 0.760]
+    labs = ["M1\nMinimax\nalpha-beta",
+            "M2\nImitation\nhuman games",
+            "M3\nSelf-play\nPPO",
+            "M4\nMCTS\n+ network"]
+    for x, t in zip(xs, labs):
+        box(ax, x, 0.345, 0.215, 0.145, t, fc=FILL, fs=5.8)
+        arr(ax, (x + 0.1075, 0.345), (x + 0.1075, 0.300), lw=0.8, ms=6)
+    ax.plot([0.1325, 0.8675], [0.503, 0.503], color=BK, lw=0.8)
+    for x in xs:
+        ax.plot([x + 0.1075, x + 0.1075], [0.503, 0.490], color=BK, lw=0.8)
+    box(ax, 0.12, 0.215, 0.76, 0.080,
+        "Colour-balanced round robin\nplus a random floor and an engine reference", fs=5.9)
+    arr(ax, (0.50, 0.215), (0.50, 0.173), lw=0.9)
+    box(ax, 0.08, 0.075, 0.84, 0.095,
+        "Fitted Elo with 95% confidence intervals,\nanchored to an open-source engine",
+        fc=FILL, bold=True, fs=6.0)
+    ax.text(0.50, 0.025, "Only the decision function changes, so differences are\n"
+            "attributable to the paradigm rather than the engineering.",
+            ha="center", va="center", fontsize=5.8, linespacing=1.5)
+    save(fig, "p22_apparatus.png")

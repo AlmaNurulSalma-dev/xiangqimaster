@@ -23,8 +23,11 @@ from reportlab.pdfbase.ttfonts import TTFont
 from PIL import Image as PILImage
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, "research", "13_advisor_consultation.md")
-OUT = os.path.join(ROOT, "research", "13_advisor_consultation.pdf")
+import sys as _sys
+_a = [x for x in _sys.argv[1:] if not x.startswith("-")]
+SRC = os.path.abspath(_a[0]) if _a else os.path.join(
+    ROOT, "research", "13_advisor_consultation.md")
+OUT = os.path.abspath(_a[1]) if len(_a) > 1 else os.path.splitext(SRC)[0] + ".pdf"
 WF = r"C:\Windows\Fonts"
 
 pdfmetrics.registerFont(TTFont("TM", os.path.join(WF, "times.ttf")))
@@ -91,9 +94,9 @@ S = dict(
                          alignment=TA_LEFT),
     bul=ParagraphStyle("bul", fontName="TM", fontSize=10, leading=12,
                        alignment=TA_JUSTIFY, spaceAfter=1),
-    ref=ParagraphStyle("ref", fontName="TM", fontSize=8, leading=9.4,
+    ref=ParagraphStyle("ref", fontName="TM", fontSize=8, leading=9.0,
                        alignment=TA_JUSTIFY, leftIndent=13,
-                       firstLineIndent=-13, spaceAfter=1.5),
+                       firstLineIndent=-13, spaceAfter=1.0),
 )
 ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
          "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII"]
@@ -142,9 +145,13 @@ def col_widths(rows, width, pad=5.5):
             raw = r[i] if i < len(r) else ""
             txt = re.sub(r"[*`]", "", raw)
             fn = "TM-B" if ri == 0 else "TM"
+            full = pdfmetrics.stringWidth(txt, fn, 7.8)
+            # short labels (dates, statuses) are atomic: never let them wrap
+            if len(txt) <= 12:
+                mw = max(mw, full)
             for word in txt.split():
                 mw = max(mw, pdfmetrics.stringWidth(word, fn, 7.8))
-            pw = max(pw, pdfmetrics.stringWidth(txt, fn, 7.8))
+            pw = max(pw, full)
         minw.append(mw + pad)
         prefw.append(max(pw + pad, mw + pad))
     tmin = sum(minw)
@@ -258,8 +265,8 @@ def build():
     story, templates = [], []
     i, n = 0, len(lines)
     fign = tabn = eqn = spann = 0
-    para, meta, abstract, titleblk = [], [], [], []
-    mode, in_title = None, True
+    para, meta, abstract, titleblk, title_flow = [], [], [], [], []
+    mode, in_title, doc_title = None, True, ""
 
     def flush(first=True):
         if para:
@@ -271,6 +278,7 @@ def build():
         raw = lines[i]
         s2 = raw.strip()
         if s2.startswith("# ") and not s2.startswith("##"):
+            doc_title = re.sub(r"[*`]", "", s2[2:])
             titleblk.append(Paragraph(inline(s2[2:]), S["title"])); i += 1
         elif s2.startswith("@META "):
             meta.append(s2[6:]); i += 1
@@ -280,6 +288,7 @@ def build():
             for k, m in enumerate(meta):
                 titleblk.append(Paragraph(inline(m), S["auth"] if k == 0 else S["meta"]))
             meta = []
+            title_flow.extend(titleblk)
             story.extend(titleblk); titleblk = []
             story.append(NextPageTemplate("main"))
             story.append(FrameBreak())
@@ -385,9 +394,11 @@ def build():
 
     doc = BaseDocTemplate(OUT, pagesize=letter, leftMargin=LM, rightMargin=RM,
                           topMargin=TM_, bottomMargin=BM,
-                          title="Benchmarking Four AI Paradigms in Xiangqi",
+                          title=doc_title or "Research document",
                           author="Alma Nurul Salma (L25020007)")
-    TH = 112.0
+    TH = 18.0
+    for fl in title_flow:
+        TH += fl.wrap(SPANW, 400)[1] + getattr(fl.style, "spaceAfter", 0)
     first = PageTemplate(id="first",
                          frames=[Frame(LM, PH - TM_ - TH, SPANW, TH, id="T",
                                        leftPadding=0, rightPadding=0,
