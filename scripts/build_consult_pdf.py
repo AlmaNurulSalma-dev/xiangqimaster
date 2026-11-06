@@ -109,10 +109,18 @@ def resolve(t):
     return re.sub(r"\{\{([ft]):([A-Za-z0-9_]+)\}\}", f, t)
 
 
+ALLOWED = ("i", "b", "sub", "sup", "super", "br/")
+
+
 def inline(t, esc=True):
     t = resolve(t)
     if esc:
         t = t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        # restore the small set of inline tags that prose is allowed to use,
+        # so hand-written markup never shows up literally in the output
+        for tag in ALLOWED:
+            t = t.replace("&lt;%s&gt;" % tag, "<%s>" % tag)
+            t = t.replace("&lt;/%s&gt;" % tag, "</%s>" % tag)
     t = re.sub(r"`([^`]+)`", r'<font face="Courier" size="8">\1</font>', t)
     t = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", t)
     t = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"<i>\1</i>", t)
@@ -123,15 +131,35 @@ def inline(t, esc=True):
     return t
 
 
+def col_widths(rows, width, pad=5.5):
+    """Column widths that never break a word: every column is at least as wide
+    as its longest single word, and the slack is shared out by preferred width."""
+    nc = len(rows[0])
+    minw, prefw = [], []
+    for i in range(nc):
+        mw = pw = 0.0
+        for ri, r in enumerate(rows):
+            raw = r[i] if i < len(r) else ""
+            txt = re.sub(r"[*`]", "", raw)
+            fn = "TM-B" if ri == 0 else "TM"
+            for word in txt.split():
+                mw = max(mw, pdfmetrics.stringWidth(word, fn, 7.8))
+            pw = max(pw, pdfmetrics.stringWidth(txt, fn, 7.8))
+        minw.append(mw + pad)
+        prefw.append(max(pw + pad, mw + pad))
+    tmin = sum(minw)
+    if tmin >= width:
+        return [width * m / tmin for m in minw]
+    extra = width - tmin
+    want = [max(p - m, 0.1) for p, m in zip(prefw, minw)]
+    tw = sum(want)
+    return [m + extra * w / tw for m, w in zip(minw, want)]
+
+
 def mk_table(caption, rows, num, width):
     head, body = rows[0], rows[1:]
     nc = len(head)
-    wts = []
-    for i in range(nc):
-        m = max([len(head[i])] + [len(r[i]) if i < len(r) else 0 for r in body])
-        wts.append(max(m, 5) ** 0.60)
-    tot = sum(wts)
-    widths = [width * w / tot for w in wts]
+    widths = col_widths(rows, width)
     data = [[Paragraph(inline(c), S["cellh"]) for c in head]]
     for r in body:
         r = (r + [""] * nc)[:nc]
@@ -153,9 +181,24 @@ def mk_table(caption, rows, num, width):
 
 
 def mk_eq(markup, num, width):
-    body = Paragraph(resolve(markup), S["eq"])
+    """Centre the equation with a right-aligned number, shrinking the type
+    until the expression fits on a single line inside the column."""
+    txt = resolve(markup)
+    avail = width - 20
+    body = None
+    for fs in (9.6, 9.0, 8.4, 7.8, 7.2, 6.6):
+        st = ParagraphStyle("eq%d" % num, parent=S["eq"], fontSize=fs,
+                            leading=fs * 1.25)
+        cand = Paragraph(txt, st)
+        _, h = cand.wrap(avail, 500)
+        if h <= fs * 1.9:
+            body = cand
+            break
+    if body is None:
+        body = Paragraph(txt, ParagraphStyle("eqs%d" % num, parent=S["eq"],
+                                             fontSize=6.6, leading=8.2))
     tag = Paragraph("(%d)" % num, S["eqn"])
-    t = Table([[body, tag]], colWidths=[width - 24, 24], hAlign="CENTER")
+    t = Table([[body, tag]], colWidths=[avail, 20], hAlign="CENTER")
     t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                            ("LEFTPADDING", (0, 0), (-1, -1), 0),
                            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
@@ -249,8 +292,9 @@ def build():
             i += 1
         elif s2.startswith("@FIG "):
             flush()
-            p = [x.strip() for x in s2[5:].split("|")]
-            kind, fid, path, cap = p[0], p[1], p[2], "|".join(p[3:])
+            p = s2[5:].split("|", 3)
+            kind, fid, path, cap = (p[0].strip(), p[1].strip(),
+                                    p[2].strip(), p[3].strip())
             fign += 1
             if kind == "span":
                 spann += 1
@@ -271,9 +315,9 @@ def build():
             i += 1
         elif s2.startswith("@EQ "):
             flush()
-            p = [x.strip() for x in s2[4:].split("|")]
+            p = s2[4:].split("|", 2)
             eqn += 1
-            story.extend(mk_eq("|".join(p[1:]), eqn, COLW))
+            story.extend(mk_eq(p[2].strip(), eqn, COLW))
             i += 1
         elif s2.startswith("@TABLE "):
             flush()

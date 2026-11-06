@@ -198,11 +198,11 @@ def f_m2():
     box(ax, 0.17, 0.286, 0.70, 0.092,
         "$\\mathcal{L}=\\mathcal{L}_{\\pi}+\\mathcal{L}_{v}$  (equal weighting)\n"
         "Adam,  lr $10^{-3}$,  batch 512,  30 epochs", fc=FILL, fs=6.0)
-    ax.add_patch(FancyArrowPatch((0.115, 0.332), (0.115, 0.717),
-                 arrowstyle="-|>", mutation_scale=7, color=BK, lw=0.8,
-                 ls=(0, (3, 2)), connectionstyle="arc3,rad=0.30"))
-    ax.text(0.038, 0.525, "update $\\theta$", fontsize=5.9,
-            rotation=90, ha="center", va="center")
+    ax.plot([0.17, 0.085], [0.332, 0.332], color=BK, lw=0.8, ls=(0, (3, 2)))
+    ax.plot([0.085, 0.085], [0.332, 0.717], color=BK, lw=0.8, ls=(0, (3, 2)))
+    arr(ax, (0.085, 0.717), (0.158, 0.717), lw=0.8, ms=7, ls=(0, (3, 2)))
+    ax.text(0.052, 0.525, "training loop: $\\theta \\leftarrow \\theta - \\eta\\nabla L$",
+            fontsize=5.7, rotation=90, ha="center", va="center")
     ax.plot([0.02, 0.98], [0.238, 0.238], color=BK, lw=0.8)
     ax.text(0.02, 0.196, "The target is the move a human master actually played, so the agent\n"
             "reproduces human play but cannot exceed the quality of the demonstra-\n"
@@ -233,11 +233,11 @@ def f_m3():
         "4 epochs over the batch, minibatch 512,\nlr $3\\times10^{-4}$, entropy bonus 0.01", fs=6.0)
     for y1, y2 in ((0.902, 0.874), (0.794, 0.766), (0.686, 0.658), (0.530, 0.498)):
         arr(ax, (0.54, y1), (0.54, y2))
-    ax.add_patch(FancyArrowPatch((0.085, 0.445), (0.085, 0.938),
-                 arrowstyle="-|>", mutation_scale=8, color=BK, lw=0.9,
-                 connectionstyle="arc3,rad=0.34"))
-    ax.text(0.028, 0.690, "repeat to 500,000 steps", fontsize=5.9, rotation=90,
-            ha="center", va="center")
+    ax.plot([0.17, 0.085], [0.457, 0.457], color=BK, lw=0.9)
+    ax.plot([0.085, 0.085], [0.457, 0.941], color=BK, lw=0.9)
+    arr(ax, (0.085, 0.941), (0.158, 0.941), lw=0.9, ms=8)
+    ax.text(0.050, 0.700, "iteration loop: repeat to 500,000 steps", fontsize=5.7,
+            rotation=90, ha="center", va="center")
     ax.plot([0.02, 0.98], [0.372, 0.372], color=BK, lw=0.8)
     ax.text(0.02, 0.340, "Two initialisations are compared under an identical budget:",
             fontsize=6.0, va="center")
