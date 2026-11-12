@@ -219,6 +219,9 @@ limits strength — and one goal: a trustworthy, analysed answer, plus a reusabl
 | **24 Oct** | **Pikafish distillation** | Generated 5,000 engine-vs-engine games, trained on them — plateaued **below** human imitation |
 | **25–26 Oct** | **4× bigger network** (~4.85M params) | Gained **almost nothing** (+0.008 accuracy) |
 | **1–2 Nov** | **4-page research proposal** | Framed the finished system as a controlled paradigm comparison |
+| **3–9 Nov** | **Advisor consultation document** | 16-page paper covering the Xiangqi background, all 3 datasets, all 4 methods, figures, and the output-format question, sent via WeChat |
+| **10–11 Nov** | **Interactive-platform wireframes** | Pixel-art mockups for all 5 core screens (landing, select, gameplay, compare, summary) + a character roster mapped to real Elo results, sent as a concept document |
+| **12 Nov** | **Supervisor approved the output and set direction** | Confirmed the interactive platform as the thesis output; confirmed search (MCTS), not data/network scale, is the main driver of strength; instructed to finish the planned objectives before widening scope |
 
 **How the dataset was processed to fit the project (21–23 Sep):**
 - Took **141,356 legal Xiangqi games** (public PGN dataset).
@@ -299,12 +302,12 @@ numbers, finishing the ablations, and the writing plus the demo."
 
 | Period | Milestone | Detail |
 |---|---|---|
-| **Nov 2026** (now) | Finalise proposal · formalise accuracy analysis · start scaling | 4-page proposal done; lock the test-set move-prediction report; begin bigger round-robins |
-| **Dec 2026** | Tighter results + absolute anchor | Scale every tournament to more games/pair for **tighter 95% CIs**; add **Pikafish anchor** across all agents; lock final result tables |
+| **Nov 2026** (now) | Finalise proposal · add the search-is-the-driver finding · start scaling | Write the "search, not scale, is the main contributor" conclusion into the proposal per the advisor's question; lock the test-set move-prediction report; begin bigger round-robins |
+| **Dec 2026** | Move onto the supervisor's GPU server · tighter results + absolute anchor | First runs on the server (2x RTX 5880 Ada) provided by the supervisor; scale every tournament to more games/pair for **tighter 95% CIs**; add **Pikafish anchor** across all agents; lock final result tables |
 | **Jan 2027** | Write **Chapters 1–3** | Introduction · Related Work · Methodology (engine, encoding, the four agents, the league) |
 | **Feb 2027** | Write **Chapter 4** + finish ablations | Results & analysis; complete the single-variable ablations; finalise all figures |
-| **Mar 2027** | Write **Chapter 5** + full draft | Discussion, limitations, future work; deliver the **full first draft** to advisor |
-| **Apr 2027** | Revisions + build the demo | Advisor revisions; reproducibility pass (fixed seeds, committed manifest); build the **defense demo** + slides |
+| **Mar 2027** | Write **Chapter 5** · begin the interactive demo | Discussion, limitations, future work; demo build starts now that the advisor has **confirmed it as the thesis output** (human-vs-AI play, live advantage meter, per-move feedback, character roster) |
+| **Apr 2027** | Full draft · finish the demo | Deliver the **full first draft** to advisor; advisor revisions; reproducibility pass (fixed seeds, committed manifest); complete the **defense demo** + slides |
 | **May 2027** | Rehearse & **defend** | Mock defense, final revisions, **thesis defense (end of May 2027)** |
 
 🎤 "This is realistic because the risky part — the long training runs — is already

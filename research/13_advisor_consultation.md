@@ -24,7 +24,7 @@ The fourth answer combines the previous two. AlphaGo paired a network trained on
 
 ### B. The problem, and where it comes from
 
-The four paradigms above are rarely compared against one another. They are compared against *humans*, or against the previous state of the art in whatever domain the authors chose. This matters because the published demonstrations differ along several axes simultaneously. AlphaZero is reported on chess, shogi and Go with a large residual network and thousands of accelerators [11]; PPO is reported on continuous-control benchmarks and video games [7]; behaviour cloning is reported on driving and robotics [5]. A practitioner who asks the straightforward engineering question — *given one game and a fixed budget, which of these four should I build?* — cannot answer it from the literature, because no two of those results share a domain, an architecture, or a compute budget.
+The four paradigms above are rarely compared against one another. They are compared against *humans*, or against the previous state of the art in whatever domain the authors chose. This matters because the published demonstrations differ along several axes simultaneously. AlphaZero is reported on chess, shogi and Go with a large residual network and thousands of accelerators [11]; PPO is reported on continuous-control benchmarks and video games [7]; behaviour cloning is reported on driving and robotics [5]. A practitioner who asks the straightforward engineering question — *given one game and a fixed amount of compute, which of these four should I build?* — cannot answer it from the literature, because no two of those results share a domain, an architecture, or how much compute was used.
 
 This is not a hypothetical concern. It is a documented methodological problem in reinforcement learning: Henderson *et al.* showed that reported performance differences in deep reinforcement learning are frequently attributable to implementation details, random seeds, and evaluation choices rather than to the algorithms being compared, and they argued explicitly for controlled, shared-codebase comparisons with reported variance [15]. The present project is a direct response to that argument, applied to a domain in which it has not yet been done.
 
@@ -34,7 +34,7 @@ This work makes four contributions.
 
 1. A single reproducible codebase in which four distinct AI paradigms play the same game through the same interfaces, so that differences in measured strength are attributable to the algorithms rather than to the surrounding engineering.
 2. An evaluation league for Xiangqi that reports relative Elo with confidence intervals, anchored where possible to an open-source engine, together with a held-out move-prediction accuracy metric.
-3. An empirical finding, obtained from four independent ablations, that at the scale available to a single-laptop researcher the binding constraint on strength is model capacity and training budget rather than the choice of algorithm.
+3. An empirical finding, obtained from four independent ablations, that at the scale available to a single-laptop researcher the binding constraint on strength is model capacity and the amount of training data rather than the choice of algorithm.
 4. An open artefact — a rules engine, three documented datasets, trained checkpoints, and an interactive demonstrator — intended for reuse by subsequent students.
 
 ### D. Structure of this report
@@ -90,7 +90,7 @@ The author has read the works below, including the Xiangqi-specific papers recom
 
 **Imitation learning.** Pomerleau demonstrated behaviour cloning by training a network to copy a human driver [4]; Hussein *et al.* survey the methods and their failure modes [5]; Ross *et al.* formalised the distribution-shift problem and proposed an iterative correction [6]. *Useful point:* imitation is cheap and strong in states resembling the training data, but theory predicts degradation in unfamiliar states — a prediction that the endgame results in Section VIII-C appear to confirm.
 
-**Self-play reinforcement learning.** Sutton and Barto give the formal framework [17]; Schulman *et al.* introduced PPO, the clipped-objective policy-gradient method used here [7]; Vinyals *et al.* showed self-play reaching grandmaster level in a far less structured domain [8]. *Useful point:* self-play needs no human data but is sample-hungry, which makes it the paradigm most sensitive to a limited compute budget.
+**Self-play reinforcement learning.** Sutton and Barto give the formal framework [17]; Schulman *et al.* introduced PPO, the clipped-objective policy-gradient method used here [7]; Vinyals *et al.* showed self-play reaching grandmaster level in a far less structured domain [8]. *Useful point:* self-play needs no human data but is sample-hungry, which makes it the paradigm most sensitive to limited compute.
 
 **Monte Carlo tree search with learned evaluation.** Coulom introduced Monte Carlo tree search [12]; Kocsis and Szepesvári supplied the bandit-based selection rule that makes it converge [13]; Browne *et al.* survey the variants [14]. Silver *et al.* combined the search with deep networks in AlphaGo [9], removed the human data in AlphaGo Zero [10], and generalised the method across games in AlphaZero [11]; Schrittwieser *et al.* extended it to a learned model of the environment [21]. *Useful point:* this is the strongest known recipe, but the published versions were trained with thousands of accelerators [11], which is precisely the condition this project cannot reproduce and therefore must measure honestly.
 
@@ -121,7 +121,7 @@ Chen *et al.* propose Xiangqi-R1, using Xiangqi as a testbed for spatial and str
 
 **Problem statement.** There is no controlled, reproducible comparison of the four principal game-AI paradigms on a single domain, and consequently no evidence-based guidance on which paradigm to choose, or on what actually limits each one, when resources are constrained.
 
-**Proposed solution.** Implement all four paradigms over one shared Xiangqi environment, one shared state and action representation, and one shared network; evaluate them in a single Elo league with confidence intervals and an engine anchor; and attribute the resulting differences through targeted ablations on search, capacity, data source and training budget.
+**Proposed solution.** Implement all four paradigms over one shared Xiangqi environment, one shared state and action representation, and one shared network; evaluate them in a single Elo league with confidence intervals and an engine anchor; and attribute the resulting differences through targeted ablations on search, capacity, data source and amount of training.
 
 ---
 
@@ -129,7 +129,7 @@ Chen *et al.* propose Xiangqi-R1, using Xiangqi as a testbed for spatial and str
 
 ### A. Aim
 
-To produce a controlled, reproducible and analysed answer to the question of which artificial-intelligence paradigm plays Xiangqi best under a fixed and honestly reported budget, and to deliver the evaluation league as a reusable research artefact.
+To produce a controlled, reproducible and analysed answer to the question of which artificial-intelligence paradigm plays Xiangqi best under a fixed and honestly reported amount of compute, and to deliver the evaluation league as a reusable research artefact.
 
 ### B. Research questions
 
@@ -144,7 +144,7 @@ To produce a controlled, reproducible and analysed answer to the question of whi
 - **O1.** Implement a complete, rules-correct Xiangqi environment with a fixed action space and a tensor encoding shared by all learned agents.
 - **O2.** Implement the four paradigms over that shared substrate, plus a random floor and an engine ceiling.
 - **O3.** Build an evaluation league reporting relative Elo with 95% confidence intervals, together with a held-out move-prediction metric.
-- **O4.** Run targeted ablations that isolate search budget, network capacity, and data source, in order to answer RQ3.
+- **O4.** Run targeted ablations that isolate search depth, network capacity, and data source, in order to answer RQ3.
 - **O5.** Release the environment, the datasets, the checkpoints and an interactive demonstrator so that the comparison can be rerun and extended.
 
 ---
@@ -229,13 +229,13 @@ whose clipping term is what keeps each update from moving the policy so far that
 
 **Configuration.** Learning rate 3 x 10^-4, 2,048 steps per update, batch size 512, four epochs per update, clipping parameter 0.2, discount 0.99, entropy coefficient 0.01, 500,000 environment steps. Two variants are trained: **M3a** from random initialisation, and **M3b** initialised from the M2 network. The contrast between them is the experiment that answers RQ2.
 
-@FIG col | m3 | research/figures/paper/p08_m3.png | Method M3, read top to bottom. The arrow on the left is the iteration loop: each policy update produces a new policy, which then generates the next batch of self-play games, and the cycle repeats to the step budget. The two initialisations, random and imitation-pretrained, make this method a direct test of RQ2.
+@FIG col | m3 | research/figures/paper/p08_m3.png | Method M3, read top to bottom. The arrow on the left is the iteration loop: each policy update produces a new policy, which then generates the next batch of self-play games, and the cycle repeats to the planned number of steps. The two initialisations, random and imitation-pretrained, make this method a direct test of RQ2.
 
 ### G. Method M4 — Monte Carlo tree search with the learned network
 
 **Definition.** Before each move the agent builds a search tree by simulation. The network supplies prior probabilities and a position evaluation, which replaces the random rollouts of classical MCTS [12], [13], [14]; the construction follows AlphaZero [11].
 
-**Flow (\{\{f:m4\}\}).** **Select** — descend the tree using the PUCT rule, which balances the accumulated action value against the network's prior scaled by an exploration term. **Expand** — add the leaf reached and enumerate its legal moves. **Evaluate** — query the network for the leaf's priors and value. **Back up** — propagate the value along the traversed path, incrementing visit counts. After the simulation budget is exhausted, play the most-visited move.
+**Flow (\{\{f:m4\}\}).** **Select** — descend the tree using the PUCT rule, which balances the accumulated action value against the network's prior scaled by an exploration term. **Expand** — add the leaf reached and enumerate its legal moves. **Evaluate** — query the network for the leaf's priors and value. **Back up** — propagate the value along the traversed path, incrementing visit counts. After the simulation count is exhausted, play the most-visited move.
 
 Each edge of the tree stores a visit count *N*, a total value *W*, a mean value *Q* = *W*/*N*, and the network prior *P*. Selection descends by the PUCT rule
 
@@ -358,7 +358,7 @@ Six studies have been completed, each targeting a specific question ({{t:studies
 
 ### E. Threats to validity
 
-Three are acknowledged. *Scale*: all conclusions hold at the compute budget of Section IX and may not extrapolate. *Anchoring*: Elo is comparable within a tournament, not across tournaments, so cross-study comparisons in this report are made only where agents appeared in the same league. *Sample size*: the later leagues use 80 to 100 games per agent, which yields confidence intervals of roughly 70 to 100 Elo; differences smaller than that are not claimed as significant.
+Three are acknowledged. *Scale*: all conclusions hold at the scale of Section IX and may not extrapolate. *Anchoring*: Elo is comparable within a tournament, not across tournaments, so cross-study comparisons in this report are made only where agents appeared in the same league. *Sample size*: the later leagues use 80 to 100 games per agent, which yields confidence intervals of roughly 70 to 100 Elo; differences smaller than that are not claimed as significant.
 
 ---
 
@@ -374,7 +374,7 @@ Three are acknowledged. *Scale*: all conclusions hold at the compute budget of S
 
 ### B. The imitation effect (RQ2)
 
-The result here was contrary to expectation and is the most interesting finding so far. In the separate seven-agent round robin of study S1, which included every PPO variant and is therefore anchored differently from the five-agent league above, imitation learning *alone* scored 1689 Elo, while every self-play variant scored between 1444 and 1526 — including the variants initialised from the imitation network. Self-play at the budget available did not improve on imitation; in the self-play-opponent configuration it actively degraded it. The explanation consistent with the literature is sample efficiency: policy-gradient self-play is known to require very large numbers of environment interactions [7], [8], and 500,000 steps is several orders of magnitude below what the landmark results used [11], [18]. The honest conclusion at this stage is therefore not "self-play is inferior" but "self-play is not competitive at this budget", which is exactly the kind of claim this project is designed to make precisely.
+The result here was contrary to expectation and is the most interesting finding so far. In the separate seven-agent round robin of study S1, which included every PPO variant and is therefore anchored differently from the five-agent league above, imitation learning *alone* scored 1689 Elo, while every self-play variant scored between 1444 and 1526 — including the variants initialised from the imitation network. Self-play at the scale used here did not improve on imitation; in the self-play-opponent configuration it actively degraded it. The explanation consistent with the literature is sample efficiency: policy-gradient self-play is known to require very large numbers of environment interactions [7], [8], and 500,000 steps is several orders of magnitude below what the landmark results used [11], [18]. The honest conclusion at this stage is therefore not "self-play is inferior" but "self-play is not competitive at this scale", which is exactly the kind of claim this project is designed to make precisely.
 
 ### C. What the network learned
 
@@ -386,20 +386,47 @@ The result here was contrary to expectation and is the most interesting finding 
 
 Four separate interventions were attempted to push strength higher, and none produced a significant gain.
 
-1. **More search.** Increasing the MCTS simulation budget eightfold, from 100 to 800 per move, did not improve the score against the network baseline ({{f:ablsearch}}). This ablation used twenty games per setting, so it establishes the absence of a large effect rather than the absence of any effect; it is scheduled for repetition at a larger sample.
+1. **More search.** Increasing the MCTS simulation count eightfold, from 100 to 800 per move, did not improve the score against the network baseline ({{f:ablsearch}}). This ablation used twenty games per setting, so it establishes the absence of a large effect rather than the absence of any effect; it is scheduled for repetition at a larger sample.
 2. **More capacity.** Quadrupling the network from 1.15 M to 4.85 M parameters produced a 43-Elo change within the same tournament, well inside the 95% confidence interval of roughly 78 Elo ({{f:ablcap}}).
 3. **A stronger teacher.** The engine-distilled network reached 1502 Elo against 1490 for the human-taught network in the same league — statistically indistinguishable — and its move-prediction accuracy plateaued at about 13.6% against 34.3% for the human-taught network on the same unmasked metric.
 4. **More training.** Validation top-one accuracy rose from about 26% to about 34% over the first two-thirds of training and then stopped improving, so the remaining epochs added capacity utilisation rather than skill.
 
-@FIG col | ablsearch | research/figures/paper/p16_abl_search.png | Search ablation. Increasing the MCTS simulation budget eightfold does not improve the score against the M2 network.
+@FIG col | ablsearch | research/figures/paper/p16_abl_search.png | Search ablation. Increasing the MCTS simulation count eightfold does not improve the score against the M2 network.
 
 @FIG col | ablcap | research/figures/paper/p17_abl_capacity.png | Capacity ablation, measured inside a single tournament so the ratings are directly comparable. Quadrupling the parameter count moves the rating by less than the confidence interval.
 
-Four independent levers converging on the same ceiling is the signature of a shared upstream constraint rather than four separate algorithmic limits. The interpretation adopted here is that at this scale the system is limited by model capacity in combination with the volume of training signal that the available compute can deliver — a relationship that has been characterised quantitatively in other domains, where model size and data must be scaled together for either to help [23], [24]. It is important to state what this does *not* claim: it does not claim that Xiangqi has an intrinsic 1690 ceiling, only that this budget does.
+Four independent levers converging on the same ceiling is the signature of a shared upstream constraint rather than four separate algorithmic limits. The interpretation adopted here is that at this scale the system is limited by model capacity in combination with the volume of training signal that the available compute can deliver — a relationship that has been characterised quantitatively in other domains, where model size and data must be scaled together for either to help [23], [24]. It is important to state what this does *not* claim: it does not claim that Xiangqi has an intrinsic 1690 ceiling, only that this scale does.
 
 ### E. A methodological finding
 
 During the first MCTS training run the replay buffer was discarded each time training was resumed after an interruption. The agent regressed from 1703 to 1582 Elo. After the buffer was made persistent and a best-checkpoint criterion was added, a retrained agent recovered to 1691. These three figures come from separate tournaments but from an identical opponent pool and anchor, so the comparison between them is legitimate. The regression was therefore caused by the training infrastructure, not by the algorithm. This is a small, concrete instance of precisely the phenomenon Henderson *et al.* warned about [15], and it is reported because it would otherwise have been silently attributed to the method.
+
+### F. Why the top agent leads
+
+Section VIII-D asks what limits a given paradigm from improving further; a separate question, asked directly by the supervisor, is which single factor contributes most to better performance in the first place. This subsection answers it from measurements already reported above, not from a new hypothesis. Five concrete interventions have been tried, and each is listed here with its own measured outcome, so that the comparison is a record of what was done rather than an interpretation of it.
+
+1. **More search at decision time, in the agent that already searches.** The MCTS simulation count was raised eightfold, from 100 to 800 per move. Score against the fixed network baseline did not improve: 0.50 at 100 simulations, 0.25 at 200 and 400, back to 0.50 at 800 ({{f:ablsearch}}).
+2. **More network capacity.** Parameters were quadrupled, from 1.15 M to 4.85 M, with every other setting fixed. The result was a 43-Elo change, well inside the tournament's own 95% confidence interval of roughly 78 Elo ({{f:ablcap}}): not distinguishable from noise.
+3. **A stronger teacher.** The network was trained on 5,000 games generated by the Pikafish engine instead of on human games. It reached 1502 Elo against 1490 for the human-taught network in the same league, and its move-prediction accuracy plateaued at about 13.6% against 34.3% for the human-taught network on the same metric: a worse outcome, not a better one.
+4. **More training.** Validation top-one accuracy rose from about 26% to about 34% over the first two-thirds of training, then stopped improving for the remainder of the schedule.
+5. **Adding search as a mechanism, compared across paradigms rather than within one.** In the same five-agent round robin, Monte Carlo tree search over the learned network reached 1691 Elo against imitation learning's 1597, a 94-Elo gap, with the engine, encoding, network and protocol held identical between them ({{f:elomain}}).
+
+{{f:levers}} places these five outcomes on one scale. Items 1 through 4 cluster near zero, each one within or close to its own confidence interval; item 5 is an order of magnitude larger than any of them. Of everything tried so far, only the presence of search at decision time produced a change large enough to be distinguishable from noise. This is reported as the finding the measurements support, not as the only factor that could matter: the search-depth ablation (item 1) used twenty games per setting and is scheduled for repetition at a larger sample, and none of the five interventions has yet been repeated at the larger scale the supervisor's server now makes possible, so a lever that was flat at this scale is not thereby shown to be flat at every scale.
+
+@FIG col | levers | research/figures/paper/p23_levers.png | What moved the needle. Elo change from each lever tried, holding everything else fixed. Network capacity and teacher strength are each within their own confidence interval; adding search at decision time is not.
+
+### G. What the recent literature says, and what is still open
+
+The same pattern has just been reported independently, at a much larger scale. Braun trained a self-play chess agent under a stated compute limit and found that raising the search depth alone lifted a policy-only agent from 1658 to 3251 Elo, a gain of about 1593 points from search with the network held fixed [25]. That a 94-Elo gap at this project's scale and a 1593-Elo gap at a much larger one point the same way is read here as corroboration, not proof at every scale, since the two studies differ in game, network and scale.
+
+The literature also contains a genuine counter-case, and it is reported rather than set aside. Chen *et al.* trained a Xiangqi agent to a reported top-0.1%-of-human-players level using supervised learning followed by reinforcement learning and no search at all [26]. The amount of training behind their result is substantially larger than this project's. The honest reading is that search is the lever that helped *at this project's scale*; whether a searchless agent can reach the same strength here once trained at a comparable scale to Chen *et al.*'s is an open question this project has not yet tested, not one it can rule out.
+
+**A standing limitation, stated plainly.** Every result in this report, including everything in this section, was produced on a single consumer laptop GPU (Section IX-A). None of it has yet been run on the supervisor's server. Four concrete next steps follow from that, and the author is open to any of them, or a different one the supervisor judges more useful.
+
+1. **Re-run the five-lever comparison at scale, on the supervisor's server.** The search-depth ablation used only twenty games per setting (Section VIII-F, item 1); the server's two GPUs make a far larger sample, and a repeat of the capacity and teacher ablations at a larger network and amount of training, feasible without the thermal-throttling constraint recorded in Section IX-A.
+2. **Add the Xiangqi-R1 corpus.** The Xiangqi-R1 authors' dataset of roughly five million board-move pairs drawn from professional game records [20] is independent of the two archives already used (Section VI) and comparable in order of magnitude to this project's 11.6 million positions. Using it would mean obtaining the released records or the processed pairs from their repository, converting their notation to this project's ICCS-based encoding, replay-validating every game through the project's own rule engine exactly as the existing corpus was (Section VI-B), de-duplicating against the current archive, and re-splitting at the game level before re-training imitation learning on the combined corpus. (This is a different team from the Chen *et al.* of item 4 below, who share only a common surname.)
+3. **Add a second, independently sourced master-game database.** A community-maintained archive (the `wukong-x` project) reports 40,711 games converted to UCI/UCCI/ICCS notation out of 42,228 collected. It is smaller than either archive already in use, but is drawn from a different population of players, so it tests generalisation rather than scale; the processing steps are the same as for item 2.
+4. **Attempt the searchless recipe of [26] at this project's own scale.** Chen *et al.* reach their result with supervised learning followed by a PPO variant they call Value Estimation with Cutoff, which differs from the standard masked PPO already implemented here (Section V-B). Testing the open question from Section VIII-G directly would mean implementing that specific training procedure as a fifth agent variant and entering it into the existing round robin, rather than assuming more scale alone would reproduce their result.
 
 ---
 
@@ -407,12 +434,13 @@ During the first MCTS training run the replay buffer was discarded each time tra
 
 ### A. The available hardware
 
-All training was performed on a single consumer laptop ({{t:hw}}). Sustained training caused thermal throttling, which was managed by training in cooled bursts with reduced batch sizes and worker counts.
+All results reported in this document were produced on a single consumer laptop ({{t:hw}}). Sustained training caused thermal throttling, which was managed by training in cooled bursts with reduced batch sizes and worker counts. Since this report was first drafted, the supervisor has offered access to a server with two workstation-class GPUs, intended specifically for the next steps listed in Section VIII-G. No result in this document has been produced there yet; every number above remains a single-laptop result, and the server is reported here as a resource now available, not as something already used.
 
 @TABLE hw | Training environment
 | Component | Specification |
 |---|---|
-| GPU | NVIDIA GeForce RTX 4060 Laptop GPU, 8 GB VRAM |
+| GPU (used for every result above) | NVIDIA GeForce RTX 4060 Laptop GPU, 8 GB VRAM |
+| GPU (offered, not yet used) | 2x workstation-class GPU, supervisor-provided server |
 | Framework | PyTorch 2.14 with CUDA 12.6, Python 3.12 |
 | Reinforcement learning | Stable-Baselines3 / sb3-contrib (MaskablePPO) |
 | Engine reference | Pikafish (UCI), run on CPU |
@@ -421,13 +449,13 @@ All training was performed on a single consumer laptop ({{t:hw}}). Sustained tra
 
 ### B. The scale gap
 
-{{f:compute}} places this budget beside the published landmark systems. AlphaZero used five thousand first-generation tensor processing units to generate self-play games together with sixty-four second-generation units for training [11]; an open reimplementation reported on the order of two thousand GPUs [18]. The gap to this project is three to four orders of magnitude in accelerators, before accounting for duration.
+{{f:compute}} places this project's scale beside the published landmark systems, and now beside the newly-offered server as well. AlphaZero used five thousand first-generation tensor processing units to generate self-play games together with sixty-four second-generation units for training [11]; an open reimplementation reported on the order of two thousand GPUs [18]. Moving from one laptop GPU to two workstation GPUs narrows that gap by less than one order of magnitude; it does not close it. The gap to the landmark systems remains three to four orders of magnitude in accelerators, before accounting for duration, even once the new server is in use.
 
-@FIG col | compute | research/figures/paper/p18_compute.png | Accelerators used by landmark systems compared with this project, on a logarithmic scale. Figures are taken from the cited papers.
+@FIG col | compute | research/figures/paper/p18_compute.png | Accelerators used by landmark systems compared with this project, on a logarithmic scale, including the server now offered but not yet used. Figures for the landmark systems are taken from the cited papers.
 
 ### C. What this means for the project
 
-Two consequences follow, and both are stated plainly rather than hidden. First, **AlphaGo-level or engine-level play is not an achievable target for this thesis.** Reaching it would require compute and budget of a different order, and claiming otherwise would be dishonest. Second, and more constructively, **this does not invalidate the research question.** The contribution is not "the strongest Xiangqi agent"; it is "a controlled comparison and an attribution of what limits each paradigm, measured rigorously at a stated budget." A result of the form "under budget B, paradigm X dominates paradigm Y, and the binding constraint is Z" is scientifically meaningful and is exactly what the literature currently lacks [15]. The budget is therefore reported as a parameter of the study rather than apologised for as a weakness.
+Two consequences follow, and both are stated plainly rather than hidden. First, **AlphaGo-level or engine-level play is not an achievable target for this thesis.** Reaching it would require resources of a different order, and claiming otherwise would be dishonest. Second, and more constructively, **this does not invalidate the research question.** The contribution is not "the strongest Xiangqi agent"; it is "a controlled comparison and an attribution of what limits each paradigm, measured rigorously at a stated scale." A result of the form "at scale B, paradigm X dominates paradigm Y, and the binding constraint is Z" is scientifically meaningful and is exactly what the literature currently lacks [15]. The scale used is therefore reported as a parameter of the study rather than apologised for as a weakness.
 
 ---
 
@@ -475,7 +503,7 @@ The scientific justification is that feature 3 converts the project from a bench
 | Oct 2026 | Evaluation league and the six studies; test-set accuracy report | Complete |
 | Nov 2026 | Proposal, progress review, live demonstrator, this report | Complete |
 | Nov–Dec 2026 | Supervisor consultation; freeze the experimental protocol | Planned |
-| Dec 2026–Feb 2027 | Scale-up study: larger networks and larger self-play budgets, to test whether the ceiling of Section VIII-D is a budget artefact | Planned |
+| Dec 2026–Feb 2027 | Scale-up study: larger networks and larger self-play runs, to test whether the ceiling of Section VIII-D is a scale artefact | Planned |
 | Feb–Mar 2027 | Absolute-strength calibration against an engine ladder at several depths | Planned |
 | Mar–Apr 2027 | Interactive platform, subject to the decision in Section X | Planned |
 | Mar–May 2027 | Thesis writing | Planned |
@@ -503,7 +531,7 @@ The scientific justification is that feature 3 converts the project from a bench
 @TABLE risks | Principal risks and mitigation
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Scale-up study does not break the ceiling | Medium | Medium | A negative result is still publishable as a characterisation of the budget-limited regime; the report is framed so that either outcome answers RQ3 |
+| Scale-up study does not break the ceiling | Medium | Medium | A negative result is still publishable as a characterisation of this scale-limited regime; the report is framed so that either outcome answers RQ3 |
 | Hardware limits or thermal throttling delay training | Medium | Medium | Checkpoint-and-resume throughout; cooled-burst scheduling; cloud GPU hours for the largest single run if required |
 | Interactive platform consumes time needed for the study | Medium | High | Treated as a secondary objective with a fixed time box; decision deferred to the supervisor (Section X) |
 | Elo intervals too wide to separate agents | Medium | Medium | Increase games per pair in the final league; report effect sizes and intervals rather than point ranks |
@@ -517,7 +545,7 @@ The author would value the supervisor's judgement on the following, and is equal
 
 1. **Output.** Is the interactive platform of Section X a suitable thesis output, or should the effort go entirely into the experimental study? If the platform is approved, how much of it is appropriate: human-versus-model play only, or also the per-move explanation and the live rating?
 2. **Scope of the comparison.** Are four paradigms the right number, or would the committee prefer three studied more deeply?
-3. **Framing of the compute limitation.** Is the position taken in Section IX-C — reporting the budget as a parameter of the study rather than as a shortcoming — the right way to present this to the committee?
+3. **Framing of the compute limitation.** Is the position taken in Section IX-C — reporting the scale used as a parameter of the study rather than as a shortcoming — the right way to present this to the committee?
 4. **Absolute calibration.** Is calibration against an engine ladder sufficient, or should the work also attempt a mapping to human rating levels, which would require human games and raises its own validity questions?
 5. **Publication.** Is any part of this of a standard worth preparing for submission, and if so, which part?
 6. **Literature.** Are there works, particularly Chinese-language Xiangqi literature, that the author should read and that are not represented in Section III?
@@ -574,6 +602,10 @@ The author would value the supervisor's judgement on the following, and is equal
 
 [24] J. Kaplan *et al.*, "Scaling laws for neural language models," arXiv:2001.08361, 2020.
 
+[25] B. Braun, "Engineering efficient self-play chess: search, replay, and throughput under limited compute," arXiv:2609.37447, 2026.
+
+[26] Y. Chen, J. Lin, and Z. Shu, "Mastering Chinese chess AI (Xiangqi) without search," arXiv:2410.04865, 2024.
+
 ---
 
 ## APPENDIX A — PRESENTATION OUTLINE
@@ -581,7 +613,7 @@ The author would value the supervisor's judgement on the following, and is equal
 For the oral presentation the following structure is planned, matching the required format.
 
 1. **Introduction and overview** — what Xiangqi is, and the observation that four different kinds of AI have each claimed a landmark victory in games.
-2. **Research question** — given one game and one budget, which paradigm wins, and what limits the others?
+2. **Research question** — given one game and one compute scale, which paradigm wins, and what limits the others?
 3. **Aim and objectives** — a controlled, reproducible comparison plus a reusable league (Section IV).
 4. **Method and approach** — the shared substrate, the four paradigms, the three datasets, the evaluation protocol (Sections V–VII).
 5. **Expected outcomes and summary** — the ranking obtained so far, the ceiling finding, the schedule to the defense, and the contribution to the field (Sections VIII, XI, XII).
@@ -592,10 +624,10 @@ The accompanying slide deck will use a dark background with high-contrast figure
 
 | Question | Prepared response |
 |---|---|
-| Why not just use AlphaZero, since it is the best? | It is included, as M4, and it does win. The research question is not which is best in the abstract but how the four compare under a stated budget, and what limits each — which the AlphaZero papers do not answer for Xiangqi. |
+| Why not just use AlphaZero, since it is the best? | It is included, as M4, and it does win. The research question is not which is best in the abstract but how the four compare at a stated scale, and what limits each — which the AlphaZero papers do not answer for Xiangqi. |
 | Your agents are far weaker than Pikafish. Is the work still valuable? | Yes, because the contribution is the controlled comparison, not peak strength. The engine is included precisely so that the gap is measured and reported rather than ignored. |
-| The network has only about one million parameters. Is that not very small? | It is small by design. This is a single-game policy-value network, not a general model; strength in board games comes from the combination of search and network, which is why the search agent built on this same small network is the strongest. The capacity ablation in Section VIII-D tested whether more parameters would help, and at this budget they did not. |
-| Why is imitation learning beating self-play? Is that not the wrong way round? | At a large budget the literature expects self-play to win. The finding here is that at 500,000 steps it is not yet competitive, which is a statement about the budget, not a refutation of the method; this is stated explicitly in Section VIII-B. |
+| The network has only about one million parameters. Is that not very small? | It is small by design. This is a single-game policy-value network, not a general model; strength in board games comes from the combination of search and network, which is why the search agent built on this same small network is the strongest. The capacity ablation in Section VIII-D tested whether more parameters would help, and at this scale they did not. |
+| Why is imitation learning beating self-play? Is that not the wrong way round? | At large scale the literature expects self-play to win. The finding here is that at 500,000 steps it is not yet competitive, which is a statement about scale, not a refutation of the method; this is stated explicitly in Section VIII-B. |
 | Is the Elo comparable to a human rating? | No. It is a relative rating anchored within each tournament. Mapping to human ratings would require human games and is listed as an open question in Section XIV. |
 | How do you know your data is clean? | Every game is replayed through the rules engine and discarded if any move is illegal; zero games failed, and an independent sample of five hundred replayed legally. |
 

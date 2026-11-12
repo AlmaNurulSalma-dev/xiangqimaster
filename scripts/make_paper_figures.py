@@ -454,12 +454,12 @@ def f_abl_capacity():
 
 # ========================================================== compute ========
 def f_compute():
-    fig, ax = plt.subplots(figsize=(3.30, 1.62))
+    fig, ax = plt.subplots(figsize=(3.30, 1.85))
     labs = ["AlphaZero [11]\n5,000 + 64 TPUs", "ELF OpenGo [18]\napprox. 2,000 GPUs",
-            "This project\n1 laptop GPU"]
-    v = [5064, 2000, 1]
-    y = np.arange(3)[::-1]
-    ax.barh(y, v, color=["#d6d6d6", "#d6d6d6", NAVY], edgecolor=BK, lw=0.7, height=0.52)
+            "Offered, not yet used\n2 workstation GPUs", "This project so far\n1 laptop GPU"]
+    v = [5064, 2000, 2, 1]
+    y = np.arange(4)[::-1]
+    ax.barh(y, v, color=["#d6d6d6", "#d6d6d6", "#9fb0c9", NAVY], edgecolor=BK, lw=0.7, height=0.52)
     ax.set_xscale("log")
     ax.set_yticks(y); ax.set_yticklabels(labs, fontsize=6.3)
     for yy, vv in zip(y, v):
