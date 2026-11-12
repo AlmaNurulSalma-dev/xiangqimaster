@@ -3,7 +3,8 @@
 > **How to use this.** This is what you *say*, not what you read off the slides.
 > Lines in plain text are your words. Lines in *(italics)* are delivery cues — pauses,
 > tone, when to click. Don't memorise word-for-word; learn the **beats** so it sounds
-> like you, not a script. Total run time ≈ **7–8 minutes**.
+> like you, not a script. A slide was added since the last version (Slide 10, the
+> supervisor consultation), so total run time ≈ **7–8 minutes**.
 >
 > **Three rules to not sound stiff:** (1) talk to one friendly face, then another —
 > not the wall; (2) short sentences, breathe between them; (3) never read a bullet
@@ -23,7 +24,7 @@ and two totally different ideas about how a machine should *think*.
 
 So here's the question I kept coming back to: if you took the biggest ideas behind
 those breakthroughs, and set them loose on **Chinese Chess** — same board, same code,
-same budget — which one would actually win?
+same compute — which one would actually win?
 
 *(beat, gesture to slide)*
 
@@ -155,7 +156,14 @@ different training systems, the Elo tournament, and a live demo.
 
 Just to give you a sense of scale — the engine, the 2,000-move action space, over
 eleven million training positions, and 224 automated tests keeping it honest. The
-foundation is done. What's left is scaling it up — and I'll show you exactly what and
+foundation is done.
+
+*(beat)*
+
+And it kept moving after the proposal, too — the full consultation document went to
+my supervisor, the interactive platform got its first wireframes, and, just a couple
+days ago, I got his sign-off on the output and some direct feedback I'll walk you
+through in a bit. What's left is scaling it up — and I'll show you exactly what and
 when."
 
 ---
@@ -184,11 +192,44 @@ a stronger teacher, a bigger network. And all four hit the **same ceiling**, aro
 
 That tells me something important. On this scale, the thing holding the AI back isn't
 the *algorithm* — it's the **capacity and the compute**. And knowing *that* is exactly
-what tells me where to push next."
+what tells me where to push next.
+
+*(beat, slight smile)*
+
+That exact question — what's actually driving the better performance here — turned out
+to be the same thing my supervisor asked me, almost word for word, after he read the
+proposal. So let me show you that conversation, because it's shaped where this goes
+next."
 
 ---
 
-## Slide 10 — Live demo
+## Slide 10 — Supervisor consultation so far
+
+*(Calmer, more conversational. This slide is about the relationship and the process,
+not another results reveal — let it breathe.)*
+
+"Before I even had my first real consultation, I'd already built and tested most of
+this on my own, just to see if the idea was realistic. My supervisor spent almost a
+week reading through it, and came back with four things.
+
+*(count them off, one to four)*
+
+One — he offered me access to his server, two workstation GPUs, so I'm not stuck on a
+single laptop anymore. Two — he reviewed the whole proposal and confirmed the
+interactive platform is the right output for this thesis. Three — he asked me
+directly: out of everything I tried, what's actually driving the better performance?
+And four — his guidance was to finish what's already planned before reaching for
+anything bigger.
+
+*(beat)*
+
+I could answer his question with data I already had — it's search, not scale. And
+that answer is now written into the proposal itself, not just something I said back to
+him over chat."
+
+---
+
+## Slide 11 — Live demo
 
 *(Switch to the web app. Keep talking while it loads — never stare at a loading screen
 in silence. Run a FAST matchup: Pikafish MAX vs Minimax d1.)*
@@ -209,14 +250,15 @@ I turn 'which AI is better' into something you can actually *see*, move by move.
 
 ---
 
-## Slide 11 — What's not done + schedule
+## Slide 12 — What's not done + schedule
 
 *(Honest and confident — examiners respect knowing your own gaps.)*
 
 "So what's left? The foundation is solid; now it's about **scale**. Next, I take those
-experiments bigger — larger networks, more self-play, more compute — to see if I can
-break that 1690 ceiling. Then I calibrate everyone against the engine on one absolute
-scale. Then I write it all up.
+experiments onto that server I mentioned — larger networks, more self-play, more
+compute — to see if I can break that 1690 ceiling. Then I calibrate everyone against
+the engine on one absolute scale. Then I write it all up, and the interactive demo
+gets built in parallel with the last writing chapter, since that's locked in now.
 
 *(gesture to timeline)*
 
@@ -225,7 +267,7 @@ I know exactly where this is going."
 
 ---
 
-## Slide 12 — Thank you
+## Slide 13 — Thank you
 
 *(Land it. Don't trail off. Look up, pause, then the closer.)*
 
@@ -243,6 +285,8 @@ Thank you — I'd love to take your questions."
 
 - **The hook (Slide 1)** and **the twist (Slide 9)** are the two moments that make or
   break the talk. Rehearse those until they feel effortless.
+- **Slide 10 (supervisor consultation) is new.** Keep it short and calm — it's proof
+  you're managing the project well, not a second results slide. Don't over-perform it.
 - **Pause after every big number and every surprise.** Silence makes you sound
   confident, not nervous.
 - **Demo = pick a fast matchup** (Pikafish MAX vs Minimax d1) so it finishes in a
