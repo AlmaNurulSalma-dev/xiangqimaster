@@ -177,6 +177,18 @@
   .toggle{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:19px;color:var(--muted)}
   .status{margin-top:10px;font-size:18px;color:var(--muted);min-height:20px}
 
+  /* mode toggle + human-vs-AI controls */
+  .modebar{display:flex;gap:0;margin-bottom:16px;border:3px solid var(--line)}
+  .modebar button{flex:1;padding:11px 8px;border:none;background:var(--panel2);
+    color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+  .modebar button.on{background:var(--accent);color:#fff}
+  .modebar button:not(:last-child){border-right:3px solid var(--line)}
+  .charcard{margin-top:8px;font-size:17px;color:var(--muted)}
+  .charcard b{color:var(--ink)}
+  .piece.selectable{cursor:pointer}
+  .piece.mine:hover{filter:brightness(1.18)}
+  .ring.sel{border-color:#caa23a;box-shadow:0 0 12px rgba(202,162,58,.6)}
+
   /* big eval graph */
   .graphpanel{margin-top:22px;background:var(--panel);border:4px solid var(--line);padding:18px;
     box-shadow:8px 8px 0 rgba(27,27,43,.22)}
@@ -214,7 +226,7 @@
 <section id="app">
 <header>
   <h1>XIANGQI<span class="gpt">MASTER</span></h1>
-  <span class="sub">AI vs AI on the Xiangqi board — the graph shows who's ahead, move by move</span>
+  <span class="sub">Watch two AIs play, or play one yourself — the graph shows who's ahead, move by move</span>
   <button class="back" id="backBtn">&#9664; menu</button>
 </header>
 
@@ -240,22 +252,42 @@
 
     <!-- controls -->
     <div class="panel">
-      <div class="vs"><span class="dot red"></span><strong>Red</strong><span class="sub" style="color:var(--muted);font-size:17px">(moves first)</span></div>
-      <label class="fld" for="redSel">Model</label>
-      <select id="redSel"></select>
-      <div class="vs" style="margin-top:16px"><span class="dot black"></span><strong>Black</strong></div>
-      <label class="fld" for="blackSel">Model</label>
-      <select id="blackSel"></select>
-      <button class="playbtn" id="playBtn">&#9654; PLAY GAME</button>
-      <div class="row">
-        <button id="ppBtn" disabled>&#9208; Pause</button>
-        <button id="restartBtn" disabled>&#8635; Restart</button>
+      <div class="modebar">
+        <button id="modeWatchBtn" class="on">Watch AI vs AI</button>
+        <button id="modePlayBtn">Play vs AI</button>
       </div>
-      <div class="speed">
-        <label class="fld" for="speed">Speed <span id="speedTxt" style="color:var(--ink)"></span></label>
-        <input type="range" id="speed" min="1" max="10" value="6" />
+
+      <!-- Watch AI vs AI (existing behaviour, untouched) -->
+      <div id="watchControls">
+        <div class="vs"><span class="dot red"></span><strong>Red</strong><span class="sub" style="color:var(--muted);font-size:17px">(moves first)</span></div>
+        <label class="fld" for="redSel">Model</label>
+        <select id="redSel"></select>
+        <div class="vs" style="margin-top:16px"><span class="dot black"></span><strong>Black</strong></div>
+        <label class="fld" for="blackSel">Model</label>
+        <select id="blackSel"></select>
+        <button class="playbtn" id="playBtn">&#9654; PLAY GAME</button>
+        <div class="row">
+          <button id="ppBtn" disabled>&#9208; Pause</button>
+          <button id="restartBtn" disabled>&#8635; Restart</button>
+        </div>
+        <div class="speed">
+          <label class="fld" for="speed">Speed <span id="speedTxt" style="color:var(--ink)"></span></label>
+          <input type="range" id="speed" min="1" max="10" value="6" />
+        </div>
+        <label class="toggle"><input type="checkbox" id="sound" checked /> Sound effects</label>
       </div>
-      <label class="toggle"><input type="checkbox" id="sound" checked /> Sound effects</label>
+
+      <!-- Play vs AI (new) -->
+      <div id="humanControls" style="display:none">
+        <label class="fld" for="sideSel">Your side</label>
+        <select id="sideSel"><option value="red">Red (you move first)</option><option value="black">Black</option></select>
+        <label class="fld" for="oppSel">Opponent</label>
+        <select id="oppSel"></select>
+        <div class="charcard" id="oppCard"></div>
+        <button class="playbtn" id="humanStartBtn">&#9654; START GAME</button>
+        <div class="plyline" id="turnLine" style="text-align:left;margin-top:14px"></div>
+      </div>
+
       <div class="status" id="status"></div>
     </div>
   </div>
@@ -306,8 +338,12 @@ const xpct=c=>c/(COLS-1)*100, ypct=r=>(ROWS-1-r)/(ROWS-1)*100;
 let game=null, idx=0, playing=false, timer=null, loadTimer=null, t0=0;
 const pieceLayer=document.createElement('div');
 pieceLayer.style.position='absolute';pieceLayer.style.inset='0';pieceLayer.style.zIndex=2;
-const ringFrom=mk('from'), ringTo=mk('to');
+const ringFrom=mk('from'), ringTo=mk('to'), ringSel=mk('sel');
 function mk(cls){const d=document.createElement('div');d.className='ring '+cls;grid.appendChild(d);return d;}
+
+/* human-vs-AI state */
+let humanMode=false, humanSide='red', humanSessionId=null, humanTurn=false, selFrom=null, awaitingMove=false;
+let agentChars={};
 const delayMs=()=>1300-$('speed').value*110;
 const setSpeedTxt=()=>$('speedTxt').textContent='· '+delayMs()+'ms/move';
 
@@ -418,14 +454,97 @@ $('ppBtn').addEventListener('click',()=>{ if(game) (playing?stop(false):start())
 $('restartBtn').addEventListener('click',()=>{ if(!game)return; stop(false); idx=0; showFrame(0,false); start(); });
 window.addEventListener('resize',()=>{ resizeCanvas(); drawCurve(idx); });
 
+let startFrame=null;
 async function loadAgents(){
   const d=await (await fetch('/api/agents')).json();
   const pick=(sel,want)=>{ d.agents.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
     const i=d.agents.indexOf(want); if(i>=0) sel.value=want; };
   pick($('redSel'), d.agents.includes('Pikafish MAX')?'Pikafish MAX':(d.agents.includes('MCTS v2')?'MCTS v2':d.agents[d.agents.length-1]));
   pick($('blackSel'), d.agents.includes('Minimax d1')?'Minimax d1':'Random');
-  if(d.start){ renderPieces(d.start,false); updateEval(d.start); }
+  pick($('oppSel'), d.agents.includes('MCTS v2')?'MCTS v2':d.agents[d.agents.length-1]);
+  agentChars=d.characters||{};
+  renderOppCard();
+  if(d.start){ startFrame=d.start; renderPieces(d.start,false); updateEval(d.start); }
 }
+function renderOppCard(){
+  const c=agentChars[$('oppSel').value];
+  $('oppCard').innerHTML = c? `<b>${c.persona}</b> &middot; Elo ${c.elo}` : '';
+}
+$('oppSel').addEventListener('change', renderOppCard);
+
+/* ───────── mode toggle: Watch AI vs AI  /  Play vs AI ───────── */
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function clearSel(){ selFrom=null; ringSel.classList.remove('show'); }
+function setMode(human){
+  humanMode=human; stop(false); clearSel();
+  humanSessionId=null; humanTurn=false; awaitingMove=false;
+  $('modeWatchBtn').classList.toggle('on',!human);
+  $('modePlayBtn').classList.toggle('on',human);
+  $('watchControls').style.display=human?'none':'block';
+  $('humanControls').style.display=human?'block':'none';
+  $('restartBtn').disabled=true; $('status').textContent='';
+  game=null; idx=0;
+  $('plyLine').textContent=human?'Pick a side and an opponent, then press Start.':'Pick two models and press Play.';
+  if(startFrame){ renderPieces(startFrame,false); updateEval(startFrame); }
+  resizeCanvas(); drawCurve(0);
+}
+$('modeWatchBtn').addEventListener('click',()=>setMode(false));
+$('modePlayBtn').addEventListener('click',()=>setMode(true));
+
+$('humanStartBtn').addEventListener('click', async()=>{
+  audio(); $('humanStartBtn').disabled=true; clearSel();
+  humanSide=$('sideSel').value; const aiAgent=$('oppSel').value;
+  $('status').textContent='Starting…';
+  try{
+    const res=await fetch('/api/move',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'start',humanSide,aiAgent})});
+    const d=await res.json();
+    if(d.error){ $('status').textContent='Error: '+d.error; return; }
+    humanSessionId=d.sessionId;
+    game={red:humanSide==='red'?'You':aiAgent, black:humanSide==='black'?'You':aiAgent, frames:[], plies:0};
+    idx=-1;
+    for(const f of d.frames){ game.frames.push(f); idx=game.frames.length-1; game.plies=idx; showFrame(idx,false); }
+    humanTurn=!d.gameOver;
+    $('restartBtn').disabled=true;
+    $('status').textContent=d.gameOver?'Game over.':'Your move — click a piece, then where to move it.';
+  }catch(e){ $('status').textContent='Request failed: '+e; }
+  finally{ $('humanStartBtn').disabled=false; }
+});
+
+function clickToCell(e){
+  const rect=grid.getBoundingClientRect();
+  const x=(e.clientX-rect.left)/rect.width, y=(e.clientY-rect.top)/rect.height;
+  const c=Math.round(x*(COLS-1)), r=ROWS-1-Math.round(y*(ROWS-1));
+  if(c<0||c>=COLS||r<0||r>=ROWS) return null;
+  return {r,c};
+}
+function pieceAt(r,c){ if(!game||!game.frames.length) return null;
+  return game.frames[idx].pieces.find(p=>p.r===r&&p.c===c) || null; }
+
+grid.addEventListener('click', async(e)=>{
+  if(!humanMode || !humanTurn || awaitingMove || !humanSessionId) return;
+  const cell=clickToCell(e); if(!cell) return;
+  const myRed=humanSide==='red';
+  const p=pieceAt(cell.r,cell.c);
+  if(!selFrom){
+    if(p && p.red===myRed){ selFrom=cell; place(ringSel,cell.c,cell.r); ringSel.classList.add('show'); }
+    return;
+  }
+  if(selFrom.r===cell.r && selFrom.c===cell.c){ clearSel(); return; }
+  if(p && p.red===myRed){ selFrom=cell; place(ringSel,cell.c,cell.r); return; }
+  const from=selFrom; clearSel(); awaitingMove=true; humanTurn=false;
+  $('status').textContent='Thinking…';
+  try{
+    const res=await fetch('/api/move',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'move',sessionId:humanSessionId,fr:from.r,fc:from.c,tr:cell.r,tc:cell.c})});
+    const d=await res.json();
+    if(d.error){ $('status').textContent=d.error; humanTurn=true; return; }
+    for(const f of d.frames){ game.frames.push(f); idx=game.frames.length-1; game.plies=idx; showFrame(idx,true); await sleep(380); }
+    humanTurn=!d.gameOver;
+    $('status').textContent=d.gameOver?'Game over.':'Your move.';
+  }catch(err){ $('status').textContent='Request failed: '+err; humanTurn=true; }
+  finally{ awaitingMove=false; }
+});
 function showLoading(on,red,black){ const el=$('loading');
   if(on){ el.classList.add('show'); $('loadTxt').textContent=`${red} vs ${black} — the models are playing the game out…`;
     t0=Date.now(); clearInterval(loadTimer); loadTimer=setInterval(()=>{ $('elapsed').textContent=((Date.now()-t0)/1000).toFixed(1)+'s  ·  MCTS/Pikafish are really searching'; },100); }
@@ -491,7 +610,8 @@ $('startBtn').addEventListener('click',()=>{
   }, 380);
 });
 $('backBtn').addEventListener('click',()=>{
-  stop(false);
+  stop(false); clearSel();
+  humanSessionId=null; humanTurn=false; awaitingMove=false;
   $('app').classList.remove('show');
   $('landing').classList.add('show');
 });
