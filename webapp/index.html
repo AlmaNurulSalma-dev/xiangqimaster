@@ -6,7 +6,7 @@
 <title>XIANGQIMASTER</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Noto+Serif+SC:wght@600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600;700&family=Noto+Serif+SC:wght@600;700;900&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#e6e6fa; --panel:#f4f4fe; --panel2:#ecebfb; --line:#1b1b2b;
@@ -15,13 +15,19 @@
     --accent:#3b5bdb; --ok:#2ea043; --boardline:#1b1b2b;
     --cream:#faf8f0; --disc:#fffdf7; --gold:#c9a227;
     --pix:"Press Start 2P",monospace;
-    --mono:"VT323",ui-monospace,monospace;
+    --mono:"Pixelify Sans",ui-monospace,monospace;
     --serif:"Noto Serif SC","Songti SC","STSong","SimSun","Microsoft YaHei",serif;
+    /* the one silhouette every token is cut to */
+    --oct:polygon(32% 0,68% 0,100% 32%,100% 68%,68% 100%,32% 100%,0 68%,0 32%);
+    /* two offset-shadow steps and two keyline weights, and no others */
+    --sh-lg:8px 8px 0 rgba(27,27,43,.2);
+    --sh-sm:4px 4px 0 rgba(27,27,43,.28);
+    --bd:4px; --bd-sm:3px;
   }
   *{box-sizing:border-box}
   html,body{min-height:100%}
   body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:var(--mono);font-size:19px;image-rendering:pixelated;}
+    font-family:var(--mono);font-size:17px;image-rendering:pixelated;}
 
   /* ───────── screens ───────── */
   #landing,#loadscreen{position:fixed;inset:0;z-index:60;display:none;
@@ -35,22 +41,22 @@
 
   /* pixel typography */
   .pix-title{font-family:var(--pix);color:var(--ink);line-height:1.2;margin:0;
-    font-size:clamp(26px,7.4vw,66px);letter-spacing:2px}
+    font-size:clamp(24px,7vw,64px);letter-spacing:2px}
   .pix-title .gpt{color:var(--accent)}
-  .pix-title.sm{font-size:clamp(18px,4vw,30px)}
-  .pix-body{font-family:var(--mono);font-size:clamp(19px,2.6vw,26px);line-height:1.7;
+  .pix-title.sm{font-size:clamp(16px,4vw,32px)}
+  .pix-body{font-family:var(--mono);font-size:clamp(17px,2.4vw,22px);line-height:1.7;
     max-width:620px;margin:26px auto 0;color:var(--ink)}
   .pix-body mark{background:var(--ink);color:var(--bg);padding:1px 7px}
-  .pix-body.sm{font-size:20px;margin-top:16px;color:var(--muted)}
+  .pix-body.sm{font-size:18px;margin-top:16px;color:var(--muted)}
 
   /* landing CTA (blue outline → fills on hover, like the reference) */
-  .pix-cta{margin-top:34px;font-family:var(--pix);font-size:clamp(11px,1.7vw,16px);
+  .pix-cta{margin-top:34px;font-family:var(--pix);font-size:16px;
     color:var(--accent);background:var(--bg);border:3px solid var(--accent);
     padding:18px 26px;cursor:pointer;line-height:1.4;
     box-shadow:6px 6px 0 rgba(59,91,219,.35);transition:transform .05s,box-shadow .05s,background .12s,color .12s}
   .pix-cta:hover{background:var(--accent);color:#fff}
   .pix-cta:active{transform:translate(6px,6px);box-shadow:0 0 0 rgba(0,0,0,0)}
-  .land-foot{margin-top:40px;font-family:var(--mono);font-size:18px;color:var(--muted)}
+  .land-foot{margin-top:40px;font-family:var(--mono);font-size:16px;color:var(--muted)}
 
   /* loading screen */
   .load-piece{font-family:var(--serif);font-weight:900;font-size:clamp(46px,11vw,96px);
@@ -77,16 +83,17 @@
   /* ───────── app chrome ─────────
      One flat language, inherited from the landing screen: lavender ground,
      ink keylines, hard offset shadows, no gradients and no gloss.
-     Type scale (only three steps, so nothing is ever 9px again):
-       pix 10px  — micro label, uppercase, letterspaced
-       pix 13px  — buttons and section titles
-       pix 18px  — the logo
-       mono 20px — body copy and numbers                                   */
+     Type scale. Press Start 2P is drawn on an 8px grid, so it is used ONLY
+     at multiples of 8 — at 9, 10 or 13px its glyphs turn to mush. If a size
+     in between is wanted, change the typeface, not the size:
+       pix  8px — micro labels, uppercase, letterspaced
+       pix 16px — buttons, the logo, section banners
+       body 17px — copy and numbers (Pixelify Sans)                        */
   header{padding:10px 18px;border-bottom:4px solid var(--line);background:var(--panel);
     display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:20}
-  header h1{font-family:var(--pix);font-size:18px;margin:0;letter-spacing:1px;white-space:nowrap}
+  header h1{font-family:var(--pix);font-size:16px;margin:0;letter-spacing:1px;white-space:nowrap}
   header h1 .gpt{color:var(--accent)}
-  header .back{margin-left:auto;font-family:var(--pix);font-size:10px;color:var(--accent);
+  header .back{margin-left:auto;font-family:var(--pix);font-size:8px;color:var(--accent);
     background:var(--bg);border:3px solid var(--accent);padding:9px 12px;cursor:pointer;
     letter-spacing:1px}
   header .back:hover{background:var(--accent);color:#fff}
@@ -94,7 +101,7 @@
   /* segmented mode switch, centred in the header */
   .modebar{display:flex;border:3px solid var(--line);background:var(--panel2)}
   .modebar button{padding:9px 16px;border:none;background:transparent;color:var(--muted);
-    font-family:var(--pix);font-size:10px;letter-spacing:1px;cursor:pointer}
+    font-family:var(--pix);font-size:8px;letter-spacing:1px;cursor:pointer}
   .modebar button.on{background:var(--accent);color:#fff}
   .modebar button:not(:last-child){border-right:3px solid var(--line)}
 
@@ -113,25 +120,28 @@
      unrelated boxes of different sizes */
   .boardcol{--boardw:min(54vh,486px);display:flex;flex-direction:column;align-items:center}
   .boardcol > *{width:var(--boardw);max-width:100%}
-  .meter{background:var(--panel);border:4px solid var(--line);
-    box-shadow:6px 6px 0 rgba(27,27,43,.2);padding:10px 12px 11px;margin-bottom:14px}
+  .meter{background:var(--panel);border:var(--bd) solid var(--line);
+    box-shadow:var(--sh-lg);padding:10px 12px 11px;margin-bottom:14px}
   .meterhead{display:flex;justify-content:space-between;align-items:baseline;
     gap:10px;margin-bottom:7px;flex-wrap:wrap}
-  .meterhead .ttl{font-family:var(--pix);font-size:10px;letter-spacing:1px;color:var(--muted)}
-  .meterhead .verdict{font-size:19px;font-weight:700;text-align:right;flex:1;min-width:0}
+  .meterhead .ttl{font-family:var(--pix);font-size:8px;letter-spacing:1px;color:var(--muted)}
+  .meterhead .verdict{font-size:17px;font-weight:700;text-align:right;flex:1;min-width:0}
   .evalbar{position:relative;height:22px;background:var(--bluesoft);
     border:3px solid var(--line);overflow:hidden}
   .evalbar .red{height:100%;width:50%;background:var(--red);transition:width .35s ease}
   .evalbar .tick{position:absolute;top:0;bottom:0;left:50%;width:3px;
     background:var(--ink);opacity:.55;transform:translateX(-1px)}
   .meterfoot{display:flex;justify-content:space-between;margin-top:6px;
-    font-family:var(--pix);font-size:10px;letter-spacing:1px}
+    font-family:var(--pix);font-size:8px;letter-spacing:1px}
   .meterfoot .l{color:var(--red)} .meterfoot .r{color:var(--blue)}
+  /* the move counter belongs with the readout it describes, not in a third
+     box underneath the board */
+  .meterfoot .c{color:var(--muted)}
 
   /* ───────── board: flat, keyline-drawn, no wood and no gloss ───────── */
   .boardbox{position:relative;aspect-ratio:9/10;
-    padding:7.5%;background:var(--cream);border:4px solid var(--line);
-    box-shadow:8px 8px 0 rgba(27,27,43,.2)}
+    padding:7.5%;background:var(--cream);border:var(--bd) solid var(--line);
+    box-shadow:var(--sh-lg)}
   /* The playing field is 8 column gaps x 9 row gaps, so it must be exactly
      8:9 — stated as an aspect-ratio rather than as percentage insets, which
      would drift with .boardbox's border. Getting this exactly right is what
@@ -146,20 +156,48 @@
     font-family:var(--serif);font-weight:700;font-size:clamp(13px,3vmin,24px);
     letter-spacing:.35em;color:rgba(27,27,43,.42);pointer-events:none;user-select:none}
 
-  /* flat two-tone disc: the side is carried by colour, not by material.
+  /* ───────── the pieces ─────────
+     Cut octagonal tokens, not round stickers: an anti-aliased border-radius
+     disc fights every other shape in this interface. The outline IS the
+     element and the pale face is ::before, because clip-path would otherwise
+     cut a border off; drop-shadow replaces box-shadow for the same reason,
+     since it follows the clipped silhouette.
      Position lives entirely in `transform` (set from JS in px) so moving a
      piece is a compositor-only change — animating left/top would re-run
      layout on every frame of every move. */
-  .piece{position:absolute;left:0;top:0;width:11%;aspect-ratio:1;
-    border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-family:var(--serif);font-weight:900;font-size:clamp(13px,3.5vmin,27px);
-    line-height:1;user-select:none;z-index:2;background:var(--disc);
-    border:3px solid var(--line);box-shadow:2px 2px 0 rgba(27,27,43,.28);
-    will-change:transform}
-  /* a captured piece leaves instead of vanishing mid-slide */
-  .piece.dying{transition:opacity .13s linear;opacity:0;z-index:1}
-  .piece.red{color:var(--red);border-color:var(--red)}
-  .piece.black{color:var(--blue);border-color:var(--blue)}
+  .piece{position:absolute;left:0;top:0;width:11.6%;aspect-ratio:1;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--line);clip-path:var(--oct);
+    filter:drop-shadow(2px 2px 0 rgba(27,27,43,.3));
+    line-height:1;user-select:none;z-index:2;will-change:transform}
+  .piece::before{content:"";position:absolute;inset:12%;
+    background:var(--disc);clip-path:var(--oct)}
+  .piece i{position:relative;z-index:1;font-style:normal;font-family:var(--serif);
+    font-weight:900;font-size:clamp(13px,3.5vmin,27px)}
+  .piece.red{background:var(--red)} .piece.red i{color:var(--red)}
+  .piece.black{background:var(--blue)} .piece.black i{color:var(--blue)}
+  /* a captured piece flashes white on top of its attacker, then leaves */
+  .piece.flash::before{background:#fff}
+  .piece.flash i{color:var(--line)}
+  .piece.dying{transition:opacity .13s linear;opacity:0}
+
+  /* Capture shards live on their own canvas so they never touch layout.
+     width/height MUST be given explicitly: a canvas is a replaced element, so
+     with `width:auto` an absolutely positioned one sizes to its width
+     ATTRIBUTE rather than to its offsets — and since fxResize() writes that
+     attribute from the measured box, `inset:0` alone sends it into a runaway
+     resize loop. */
+  #fx{position:absolute;left:0;top:0;width:100%;height:100%;
+    pointer-events:none;z-index:4}
+  /* the board takes the hit, not the whole page — and the steps() make it
+     read as a jolt rather than a wobble */
+  @keyframes shakeS{0%,100%{transform:translate(0,0)}33%{transform:translate(-2px,1px)}
+    66%{transform:translate(2px,-1px)}}
+  @keyframes shakeL{0%,100%{transform:translate(0,0)}18%{transform:translate(-5px,2px)}
+    36%{transform:translate(5px,-3px)}54%{transform:translate(-4px,-2px)}
+    78%{transform:translate(3px,2px)}}
+  .boardbox.shakeS{animation:shakeS .12s steps(2) 1}
+  .boardbox.shakeL{animation:shakeL .26s steps(2) 1}
   .ring{position:absolute;width:13%;aspect-ratio:1;transform:translate(-50%,-50%);
     border-radius:50%;border:3px solid var(--accent);pointer-events:none;
     opacity:0;transition:opacity .15s;z-index:1}
@@ -174,9 +212,9 @@
 
   /* "CHECK!" toast over the board */
   .toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);
-    font-family:var(--pix);font-size:13px;letter-spacing:1px;color:#fff;
+    font-family:var(--pix);font-size:16px;letter-spacing:1px;color:#fff;
     background:var(--red);border:3px solid var(--line);padding:9px 14px;
-    box-shadow:4px 4px 0 rgba(27,27,43,.3);z-index:6;opacity:0;
+    box-shadow:var(--sh-sm);z-index:6;opacity:0;
     pointer-events:none;transition:opacity .1s steps(2)}
   .toast.show{opacity:1}
 
@@ -189,18 +227,18 @@
   .gover.show{display:flex;animation:goin .18s steps(3)}
   @keyframes goin{from{opacity:0}to{opacity:1}}
   .gocard{width:100%;max-width:330px;text-align:center;background:var(--panel);
-    border:4px solid var(--line);box-shadow:8px 8px 0 rgba(27,27,43,.28);
+    border:var(--bd) solid var(--line);box-shadow:var(--sh-lg);
     padding:18px 16px 16px}
   .goban{font-family:var(--pix);font-size:16px;letter-spacing:1px;line-height:1.5;
     padding:10px 6px;border:3px solid var(--line);color:#fff;background:var(--ink)}
   .goban.red{background:var(--red)} .goban.black{background:var(--blue)}
-  .gowhy{font-size:19px;color:var(--muted);margin-top:10px}
+  .gowhy{font-size:17px;color:var(--muted);margin-top:10px}
   .gowho{display:flex;align-items:center;justify-content:center;gap:9px;
-    margin-top:12px;font-size:19px;font-weight:700}
+    margin-top:12px;font-size:17px;font-weight:700}
   .gowho svg{width:32px;height:32px;display:block}
-  .gostats{font-size:18px;color:var(--muted);margin-top:10px;line-height:1.5}
+  .gostats{font-size:16px;color:var(--muted);margin-top:10px;line-height:1.5}
   .gosec{width:100%;margin-top:9px;padding:10px;border:3px solid var(--line);
-    background:var(--panel2);color:var(--ink);font:inherit;font-size:18px;cursor:pointer}
+    background:var(--panel2);color:var(--ink);font:inherit;font-size:17px;cursor:pointer}
   .gosec:hover{background:#e0dff7}
 
   /* ───────── focus ─────────
@@ -221,15 +259,15 @@
   .spinner{width:42px;height:42px;border:5px solid var(--panel2);
     border-top-color:var(--accent);animation:spin .8s steps(8) infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .loading .txt{color:var(--ink);font-size:20px;text-align:center;max-width:76%}
-  .loading .elapsed{color:var(--muted);font-size:18px}
-  .plyline{text-align:center;color:var(--muted);font-size:19px;margin-top:10px}
+  .loading .txt{color:var(--ink);font-size:18px;text-align:center;max-width:76%}
+  .loading .elapsed{color:var(--muted);font-size:16px}
+  .plyline{text-align:center;color:var(--muted);font-size:17px;margin-top:10px}
 
   /* ───────── panels ───────── */
-  .panel{background:var(--panel);border:4px solid var(--line);padding:16px;
-    box-shadow:8px 8px 0 rgba(27,27,43,.2)}
+  .panel{background:var(--panel);border:var(--bd) solid var(--line);padding:16px;
+    box-shadow:var(--sh-lg)}
   .panel + .panel{margin-top:16px}
-  .ptitle{font-family:var(--pix);font-size:10px;letter-spacing:1px;color:var(--muted);
+  .ptitle{font-family:var(--pix);font-size:8px;letter-spacing:1px;color:var(--muted);
     margin:0 0 12px}
 
   /* ───────── the versus card: who is actually playing ─────────
@@ -241,55 +279,68 @@
   .fighter.red{border-color:var(--red)}
   .fighter.black{border-color:var(--blue)}
   .fighter .sigil{width:46px;height:46px;margin:0 auto 7px;display:block;image-rendering:pixelated}
-  .fighter .who{font-family:var(--pix);font-size:10px;letter-spacing:1px;margin-bottom:5px}
+  .fighter .who{font-family:var(--pix);font-size:8px;letter-spacing:1px;margin-bottom:5px}
   .fighter.red .who{color:var(--red)} .fighter.black .who{color:var(--blue)}
-  .fighter .persona{font-size:19px;font-weight:700;line-height:1.15;
+  .fighter .persona{font-size:17px;font-weight:700;line-height:1.15;
     overflow-wrap:anywhere}
-  .fighter .model{font-size:16px;color:var(--muted);line-height:1.2;margin-top:2px;
+  .fighter .model{font-size:15px;color:var(--muted);line-height:1.2;margin-top:2px;
     overflow-wrap:anywhere}
   .fighter .elo{display:inline-block;margin-top:7px;padding:2px 7px;background:var(--ink);
-    color:var(--bg);font-family:var(--pix);font-size:9px;letter-spacing:.5px}
-  .vsmark{align-self:center;font-family:var(--pix);font-size:13px;color:var(--muted)}
+    color:var(--bg);font-family:var(--pix);font-size:8px;letter-spacing:.5px}
+  .vsmark{align-self:center;font-family:var(--pix);font-size:16px;color:var(--muted)}
 
-  label.fld{display:block;font-family:var(--pix);font-size:10px;color:var(--muted);
+  label.fld{display:block;font-family:var(--pix);font-size:8px;color:var(--muted);
     margin:14px 0 6px;letter-spacing:1px}
   select{width:100%;padding:10px;background:var(--panel2);color:var(--ink);
-    border:3px solid var(--line);font:inherit;font-size:19px;cursor:pointer}
+    border:var(--bd-sm) solid var(--line);font:inherit;font-size:17px;cursor:pointer}
   .playbtn{width:100%;margin-top:16px;padding:14px;border:3px solid var(--line);
-    background:var(--accent);color:#fff;font-family:var(--pix);font-size:13px;cursor:pointer;
+    background:var(--accent);color:#fff;font-family:var(--pix);font-size:16px;cursor:pointer;
     letter-spacing:1px;box-shadow:5px 5px 0 var(--line);transition:transform .05s,box-shadow .05s}
   .playbtn:hover{filter:brightness(1.08)}
   .playbtn:active{transform:translate(5px,5px);box-shadow:0 0 0}
   .playbtn:disabled{opacity:.45;cursor:default;box-shadow:5px 5px 0 var(--line)}
   .row{display:flex;gap:10px;margin-top:12px}
   .row button{flex:1;padding:10px;border:3px solid var(--line);background:var(--panel2);
-    color:var(--ink);cursor:pointer;font:inherit;font-size:18px}
+    color:var(--ink);cursor:pointer;font:inherit;font-size:17px}
   .row button:hover{background:#e0dff7}
   .row button:disabled{opacity:.4;cursor:default}
   .speed{margin-top:14px}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .toggle{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:18px;color:var(--muted)}
+  /* margin:0 matters — a range input ships with a default side margin, so
+     width:100% alone pushes it 4px past its panel */
+  input[type=range]{width:100%;margin:0;accent-color:var(--accent)}
+  .toggle{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:16px;color:var(--muted)}
+  .soundrow{margin-top:14px;padding-top:12px;border-top:2px solid var(--panel2)}
+  .soundrow .toggle{margin-top:0}
+  #vol{margin-top:8px}
   .keyhint{margin-top:12px;padding-top:10px;border-top:2px solid var(--panel2);
     font-size:16px;color:var(--muted)}
 
-  /* status reads as the game talking back to you, not as form helper text */
-  .status{margin-top:14px;padding:10px 12px;background:var(--panel2);
-    border:3px solid var(--line);font-size:19px;color:var(--ink);min-height:44px}
-  .status:empty{display:none}
+  /* One status channel, directly under the board where the eye already is.
+     There used to be two — this line and a box in the control panel — which
+     often said overlapping things and left you unsure which to read. */
+  .plyline.warn{color:var(--red)}
 
   /* ───────── advantage curve ───────── */
-  .graphpanel{margin-top:16px;background:var(--panel);border:4px solid var(--line);
-    padding:14px 16px 16px;box-shadow:8px 8px 0 rgba(27,27,43,.2)}
+  .graphpanel{margin-top:16px;background:var(--panel);border:var(--bd) solid var(--line);
+    padding:14px 16px 16px;box-shadow:var(--sh-lg)}
   .graphhead{display:flex;justify-content:space-between;align-items:baseline;
     margin-bottom:10px;flex-wrap:wrap;gap:8px}
-  .graphhead .title{font-family:var(--pix);font-size:10px;letter-spacing:1px;color:var(--muted)}
-  canvas{width:100%;height:150px;display:block;background:var(--panel2);
-    border:3px solid var(--line);transition:height .24s ease}
+  .graphhead .title{font-family:var(--pix);font-size:8px;letter-spacing:1px;color:var(--muted)}
+  #chart{width:100%;height:150px;display:block;background:var(--panel2);
+    border:var(--bd-sm) solid var(--line);transition:height .24s ease;cursor:crosshair}
   /* before a game exists the curve has nothing to say, so it shrinks out of
      the way instead of sitting there as the largest empty box on the page */
-  .graphpanel.empty canvas{height:72px}
+  .graphpanel.empty #chart{height:72px;cursor:default}
+  /* what the curve is reporting under the cursor */
+  .tip{position:absolute;z-index:8;pointer-events:none;opacity:0;
+    background:var(--ink);color:var(--bg);padding:6px 9px;font-size:15px;
+    line-height:1.35;white-space:nowrap;transform:translate(-50%,-115%);
+    transition:opacity .1s steps(2)}
+  .tip.show{opacity:1}
+  .tip b{font-family:var(--pix);font-size:8px;letter-spacing:1px;display:block;
+    margin-bottom:3px;color:var(--gold)}
   .graphpanel.empty .legend{display:none}
-  .legend{display:flex;gap:16px;font-size:17px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+  .legend{display:flex;gap:16px;font-size:16px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
   .legend span{display:flex;align-items:center;gap:6px}
   .sw{width:13px;height:13px;border:2px solid var(--line)}
 </style>
@@ -337,7 +388,8 @@
         <div class="evalbar" title="Advantage — red fills right as Red takes over">
           <div class="red" id="evalRed"></div><div class="tick"></div>
         </div>
-        <div class="meterfoot"><span class="l">RED</span><span class="r">BLACK</span></div>
+        <div class="meterfoot"><span class="l">RED</span>
+          <span class="c" id="plyCount">—</span><span class="r">BLACK</span></div>
       </div>
 
       <div class="boardbox">
@@ -349,6 +401,7 @@
           <div class="txt" id="loadTxt">The models are playing the game out…</div>
           <div class="elapsed" id="elapsed"></div>
         </div>
+        <canvas id="fx" aria-hidden="true"></canvas>
         <div class="toast" id="toast" role="status" aria-live="assertive"></div>
         <div class="gover" id="gover" role="dialog" aria-modal="true" aria-labelledby="goBanner">
           <div class="gocard">
@@ -361,7 +414,7 @@
           </div>
         </div>
       </div>
-      <div class="plyline" id="plyLine">Pick two models and press Play.</div>
+      <div class="plyline" id="plyLine" role="status" aria-live="polite">Pick two models and press Play.</div>
     </div>
 
     <!-- controls column -->
@@ -391,7 +444,6 @@
           <label class="fld" for="speed">Speed <span id="speedTxt" style="color:var(--ink)"></span></label>
           <input type="range" id="speed" min="1" max="10" value="6" />
         </div>
-        <label class="toggle"><input type="checkbox" id="sound" checked /> Sound effects</label>
         <div class="keyhint">Space pause · &#8592; &#8594; step · R restart</div>
       </div>
 
@@ -404,7 +456,11 @@
         <button class="playbtn" id="humanStartBtn">&#9654; START GAME</button>
       </div>
 
-        <div class="status" id="status"></div>
+      <!-- shared by both modes: muting has to be reachable while you play -->
+      <div class="soundrow">
+        <label class="toggle"><input type="checkbox" id="sound" checked /> Sound effects</label>
+        <input type="range" id="vol" min="0" max="100" value="70" aria-label="Sound volume" />
+      </div>
       </div>
     </div>
   </div>
@@ -415,7 +471,10 @@
       <span class="title">ADVANTAGE OVER THE GAME</span>
       <span id="srcTxt" class="title"></span>
     </div>
-    <canvas id="chart" width="1100" height="150"></canvas>
+    <div style="position:relative">
+      <canvas id="chart" width="1100" height="150"></canvas>
+      <div class="tip" id="tip"></div>
+    </div>
     <div class="legend">
       <span><span class="sw" style="background:var(--red)"></span>Red ahead</span>
       <span><span class="sw" style="background:var(--blue)"></span>Black ahead</span>
@@ -467,24 +526,49 @@ let agentChars={};
 const delayMs=()=>1300-$('speed').value*110;
 const setSpeedTxt=()=>$('speedTxt').textContent='· '+delayMs()+'ms/move';
 
-/* sound */
-let actx=null; const snd=()=>$('sound').checked;
-const audio=()=>{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
+/* ───────── sound ─────────
+   Everything is synthesised rather than sampled, so there is no audio file to
+   ship. The trade is timbre: oscillators cannot really sound like wood. If
+   recorded samples are ever added, swap `blip`/`sweep`/`noise` for an audio
+   sprite and the cue functions below stay exactly as they are.
+   Every voice goes through one master gain, so the volume control is real
+   rather than a per-sound guess, and the setting survives a reload. */
+let actx=null, master=null;
+const SND_KEY='xqm.sound';
+const snd=()=>$('sound').checked;
+const volume=()=>(+$('vol').value||0)/100;
+const audio=()=>{
+  if(!actx){
+    actx=new (window.AudioContext||window.webkitAudioContext)();
+    master=actx.createGain(); master.gain.value=volume(); master.connect(actx.destination);
+  }
   if(actx.state==='suspended') actx.resume();   // keep it alive so sounds never drop out
   return actx; };
+const out=()=>{ audio(); return master; };
+function saveSound(){
+  if(master) master.gain.value=volume();
+  try{ localStorage.setItem(SND_KEY,JSON.stringify({on:snd(),v:+$('vol').value})); }catch(e){}
+}
+(function restoreSound(){
+  try{ const p=JSON.parse(localStorage.getItem(SND_KEY)||'null');
+    if(p){ $('sound').checked=!!p.on; if(typeof p.v==='number') $('vol').value=p.v; }
+  }catch(e){}
+})();
+$('sound').addEventListener('change',saveSound);
+$('vol').addEventListener('input',saveSound);
 function blip(freq,dur,type,gain,when){const a=audio(),o=a.createOscillator(),g=a.createGain();
-  o.type=type;o.frequency.value=freq;o.connect(g);g.connect(a.destination);
+  o.type=type;o.frequency.value=freq;o.connect(g);g.connect(out());
   const t=a.currentTime+(when||0);g.gain.setValueAtTime(gain,t);
   g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.start(t);o.stop(t+dur);}
 function sweep(f0,f1,dur,type,gain,when){const a=audio(),o=a.createOscillator(),g=a.createGain();
   o.type=type;const t=a.currentTime+(when||0);
   o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
   g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-  o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur);}
+  o.connect(g);g.connect(out());o.start(t);o.stop(t+dur);}
 function noise(dur,gain,when){const a=audio();const b=a.createBuffer(1,Math.max(1,a.sampleRate*dur),a.sampleRate),d=b.getChannelData(0);
   for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.6);
   const s=a.createBufferSource(),g=a.createGain();g.gain.value=gain;s.buffer=b;
-  s.connect(g);g.connect(a.destination);s.start(a.currentTime+(when||0));}
+  s.connect(g);g.connect(out());s.start(a.currentTime+(when||0));}
 /* every move: a crisp wooden "clack" */
 function soundMove(){ if(!snd())return; blip(300,0.05,'square',0.14); blip(175,0.06,'sine',0.11,0.02); noise(0.03,0.09); }
 /* a capture: heavy, dramatic — clearly different from a plain move */
@@ -504,12 +588,34 @@ function soundStart(){ if(!snd())return; [392,523,659,880].forEach((f,i)=>blip(f
 function soundArrive(){ if(!snd())return; [659,880].forEach((f,i)=>blip(f,0.18,'square',0.16,i*0.09)); }
 function tick(){ if(!snd())return; blip(140+Math.random()*40,0.03,'square',0.08); }
 
+/* ───────── the small ones ─────────
+   A pixel interface should answer every touch. These are deliberately quiet:
+   they sit underneath the move clacks instead of competing with them. */
+function soundUI(){ if(!snd())return; blip(520,0.045,'square',0.07); }
+/* hover never opens the audio context — doing that before a click is both a
+   console warning and, on iOS, a context stuck in 'suspended' */
+function soundHover(){ if(!snd()||!actx)return; blip(1500,0.016,'square',0.022); }
+function soundSelect(){ if(!snd())return; blip(700,0.05,'square',0.1); blip(1050,0.05,'square',0.075,0.045); }
+function soundIllegal(){ if(!snd())return; blip(150,0.13,'sawtooth',0.13); blip(108,0.16,'square',0.1,0.04); }
+/* a big change of fortune, so the curve is felt and not only seen */
+function soundSwing(up){ if(!snd())return; sweep(up?300:720,up?760:250,0.34,'triangle',0.09); }
+
+// every control answers to the pointer, without wiring each one by hand
+document.addEventListener('pointerover',e=>{
+  const t=e.target.closest&&e.target.closest('button,select');
+  if(t&&!t.disabled) soundHover(); });
+document.addEventListener('click',e=>{
+  const t=e.target.closest&&e.target.closest('button');
+  if(t&&!t.disabled) soundUI(); });
+
 /* ───────── board geometry ─────────
    Pieces are positioned with `transform` in pixels, so we need the grid's live
    pixel size. A ResizeObserver keeps it current — cheaper and more reliable
    than a window resize listener, since the board also changes size when the
    layout reflows. */
-let gw=0, gh=0, curFrame=null;
+const fx=$('fx'), fxc=fx.getContext('2d');
+let gw=0, gh=0, gridOffX=0, gridOffY=0, curFrame=null;
+const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 function pxOf(c,r){ return [ c/(COLS-1)*gw, (ROWS-1-r)/(ROWS-1)*gh ]; }
 function setPos(el,c,r){
   const [x,y]=pxOf(c,r);
@@ -522,7 +628,10 @@ function setPos(el,c,r){
    recreate all 32 divs". That is what makes a real move animation possible —
    and it is the foundation the capture effect will sit on. */
 const pieceEls=new Map();   // piece id -> element
-function clearBoard(){ pieceEls.clear(); pieceLayer.innerHTML=''; curFrame=null; }
+function clearBoard(){
+  pieceEls.clear(); pieceLayer.innerHTML=''; curFrame=null;
+  shards=[]; fxc.clearRect(0,0,fx.width,fx.height);
+}
 function renderPieces(frame,animate){
   curFrame=frame;
   const live=new Set();
@@ -532,7 +641,8 @@ function renderPieces(frame,animate){
     if(!el){
       el=document.createElement('div');
       el.className='piece '+(p.red?'red':'black');
-      el.textContent=p.t;
+      const glyph=document.createElement('i');     // the face sits above ::before
+      glyph.textContent=p.t; el.appendChild(glyph);
       el.style.transition='none';
       setPos(el,p.c,p.r);
       pieceLayer.appendChild(el);
@@ -545,8 +655,21 @@ function renderPieces(frame,animate){
   for(const [id,el] of [...pieceEls]){          // whatever is gone was captured
     if(live.has(id)) continue;
     pieceEls.delete(id);
-    if(animate){ el.classList.add('dying'); setTimeout(()=>el.remove(),150); }
-    else el.remove();
+    if(!animate){ el.remove(); continue; }
+    if(frame.capturedId===id && frame.move){
+      // Time the hit to the attacker's arrival (the move takes 200ms), and lift
+      // the victim above it so the flash is seen rather than hidden underneath.
+      const [px,py]=pxOf(frame.move.tc,frame.move.tr);
+      const weight=PIECE_WEIGHT[+id[1]]||3;
+      const colour=el.classList.contains('red')?'#e23b2e':'#3b5bdb';
+      el.style.zIndex='3';
+      setTimeout(()=>el.classList.add('flash'),150);
+      setTimeout(()=>{ spawnShards(gridOffX+px,gridOffY+py,colour,weight); shakeBoard(weight); },200);
+      setTimeout(()=>el.classList.add('dying'),205);
+      setTimeout(()=>el.remove(),340);
+    }else{
+      el.classList.add('dying'); setTimeout(()=>el.remove(),150);
+    }
   }
   const m=frame.move;
   if(m){ place(ringFrom,m.fc,m.fr); place(ringTo,m.tc,m.tr); ringFrom.classList.add('show'); ringTo.classList.add('show'); }
@@ -561,8 +684,59 @@ function repositionAll(){
     if(el){ el.style.transition='none'; setPos(el,p.c,p.r); }
   }
 }
-new ResizeObserver(()=>{ const r=grid.getBoundingClientRect();
-  gw=r.width; gh=r.height; repositionAll(); }).observe(grid);
+new ResizeObserver(()=>{
+  const r=grid.getBoundingClientRect(), b=fx.getBoundingClientRect();
+  gw=r.width; gh=r.height;
+  gridOffX=r.left-b.left; gridOffY=r.top-b.top;   // board-box space, for the FX canvas
+  repositionAll();
+}).observe(grid);
+
+/* ───────── capture effects ─────────
+   The sound for a capture was always dramatic; the board was not — the piece
+   simply stopped existing. Shards are drawn on a separate canvas so they never
+   touch layout, and both the shard count and the shake scale with what was
+   taken: losing a chariot should not look like losing a soldier. */
+const PIECE_WEIGHT={1:9,2:2,3:2,4:4,5:9,6:5,7:1};   // type code -> rough value
+let shards=[], fxRunning=false, fxLast=0;
+function fxResize(){
+  const r=fx.getBoundingClientRect(); if(!r.width) return;
+  fx.width=r.width*devicePixelRatio; fx.height=r.height*devicePixelRatio;
+  fxc.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+new ResizeObserver(fxResize).observe(fx);
+function spawnShards(x,y,colour,weight){
+  if(reduceMotion) return;
+  const n=Math.round(5+weight*1.7);
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, speed=(40+Math.random()*120)*(0.6+weight/9);
+    shards.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-70,
+      life:1,size:3+Math.round(Math.random()*3),colour});
+  }
+  if(!fxRunning){ fxRunning=true; fxLast=0; requestAnimationFrame(fxStep); }
+}
+function fxStep(t){
+  const dt=Math.min((t-(fxLast||t))/1000,0.05); fxLast=t;
+  const W=fx.width/devicePixelRatio, H=fx.height/devicePixelRatio;
+  fxc.clearRect(0,0,W,H);
+  shards=shards.filter(s=>{
+    s.vy+=520*dt; s.x+=s.vx*dt; s.y+=s.vy*dt; s.life-=dt*2.6;
+    if(s.life<=0) return false;
+    fxc.globalAlpha=Math.max(s.life,0);
+    fxc.fillStyle=s.colour;
+    fxc.fillRect(Math.round(s.x),Math.round(s.y),s.size,s.size);  // square, not a dot
+    return true;
+  });
+  fxc.globalAlpha=1;
+  if(shards.length) requestAnimationFrame(fxStep); else { fxRunning=false; }
+}
+function shakeBoard(weight){
+  if(reduceMotion) return;
+  const box=document.querySelector('.boardbox'), cls=weight>=4?'shakeL':'shakeS';
+  box.classList.remove('shakeS','shakeL');
+  void box.offsetWidth;                            // restart the animation
+  box.classList.add(cls);
+  setTimeout(()=>box.classList.remove(cls),weight>=4?300:150);
+}
 
 /* ───────── check ─────────
    The server reports whether the side to move is in check and where its
@@ -616,12 +790,78 @@ function drawCurve(upto){
   cx.beginPath();cx.moveTo(pts[0][0],pts[0][1]);
   for(const p of pts) cx.lineTo(p[0],p[1]);
   cx.strokeStyle='#1b1b2b';cx.lineWidth=2;cx.stroke();
+
+  // Key moments, so the curve reads as a story rather than a squiggle:
+  // captures as blocks on the line, checks as ticks along the floor.
+  for(let i=1;i<pts.length;i++){
+    const f=game.frames[i];
+    if(f.capture){ cx.fillStyle='rgba(27,27,43,.5)';
+      cx.fillRect(Math.round(pts[i][0])-2,Math.round(pts[i][1])-2,4,4); }
+    if(f.check){ cx.strokeStyle='rgba(226,59,46,.55)';cx.lineWidth=1;
+      cx.beginPath();cx.moveTo(pts[i][0],H-9);cx.lineTo(pts[i][0],H-2);cx.stroke(); }
+  }
+  // the single biggest change of fortune in the whole game
+  if(swingCacheFor!==game){ swingCacheFor=game; swingCache=biggestSwing(); }
+  if(swingCache && swingCache.at<=upto){
+    const x=swingCache.at*step;
+    cx.save(); cx.setLineDash([3,3]); cx.strokeStyle='rgba(201,162,39,.9)'; cx.lineWidth=2;
+    cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke(); cx.restore();
+    cx.fillStyle='rgba(27,27,43,.6)';cx.font='8px "Press Start 2P",monospace';
+    cx.fillText('SWING',Math.min(x+5,W-48),H-14);
+  }
+
   const last=pts[pts.length-1];
   cx.strokeStyle='rgba(59,91,219,.55)';cx.lineWidth=1;cx.beginPath();cx.moveTo(last[0],0);cx.lineTo(last[0],H);cx.stroke();
   cx.fillStyle=game.frames[upto].redCp>=0?'#e23b2e':'#3b5bdb';
   cx.beginPath();cx.arc(last[0],last[1],5,0,7);cx.fill();
   cx.strokeStyle='#1b1b2b';cx.lineWidth=2;cx.stroke();
+
+  // where the cursor is pointing, while scrubbing
+  if(hoverIdx>=0 && hoverIdx<n){
+    const hx=hoverIdx*step;
+    cx.strokeStyle='rgba(27,27,43,.45)';cx.lineWidth=1;
+    cx.beginPath();cx.moveTo(hx,0);cx.lineTo(hx,H);cx.stroke();
+  }
 }
+
+/* ───────── scrubbing the curve ─────────
+   The curve holds the whole game, so it should also BE the transport: point at
+   a moment to read it, click or drag to jump the board there. */
+let hoverIdx=-1, dragging=false, swingCache=null, swingCacheFor=null;
+function chartIndexAt(clientX){
+  if(!game) return -1;
+  const r=chart.getBoundingClientRect(), n=game.frames.length;
+  const step=r.width/Math.max(n-1,1);
+  return Math.max(0,Math.min(n-1,Math.round((clientX-r.left)/step)));
+}
+function showTip(clientX){
+  const f=game.frames[hoverIdx]; if(!f) return;
+  const tip=$('tip'), wrap=chart.parentElement.getBoundingClientRect();
+  const cp=f.redCp;
+  const verdict=Math.abs(cp)>=25000?(cp>0?'Red mates':'Black mates')
+    :cp>0?`Red +${cp}`:cp<0?`Black +${-cp}`:'level';
+  const bits=[verdict];
+  if(f.capture) bits.push('capture');
+  if(f.check) bits.push('check');
+  tip.innerHTML=`<b>MOVE ${hoverIdx}</b>${bits.join(' · ')}`;
+  tip.style.left=(clientX-wrap.left)+'px';
+  tip.style.top='0px';
+  tip.classList.add('show');
+}
+function hideTip(){ hoverIdx=-1; $('tip').classList.remove('show'); if(game) drawCurve(idx); }
+chart.addEventListener('mousemove',e=>{
+  if(!game) return;
+  hoverIdx=chartIndexAt(e.clientX);
+  showTip(e.clientX);
+  if(dragging) showFrame(hoverIdx,false); else drawCurve(idx);
+});
+chart.addEventListener('mouseleave',hideTip);
+chart.addEventListener('mousedown',e=>{
+  if(!game) return;
+  e.preventDefault(); dragging=true; stop(); resetGameOver();
+  showFrame(chartIndexAt(e.clientX),false);
+});
+window.addEventListener('mouseup',()=>{ dragging=false; });
 
 /* ───────── game over ─────────
    A match that merely stops moving reads as a bug. This names the winner, says
@@ -670,11 +910,23 @@ $('goClose').addEventListener('click',()=>{ $('gover').classList.remove('show');
 $('goAgain').addEventListener('click',()=>{
   resetGameOver(); (humanMode?$('humanStartBtn'):$('playBtn')).click(); });
 
+/* The single status channel. Who is playing is already on the versus card and
+   the move number is in the meter, so this line is free to say the one thing
+   that actually needs saying right now. */
+function say(msg,warn){ const el=$('plyLine'); el.textContent=msg;
+  el.classList.toggle('warn',!!warn); }
+
 /* playback */
 function showFrame(k,withSound){ idx=k; const f=game.frames[k];
   renderPieces(f,withSound); updateEval(f); drawCurve(k);
-  $('plyLine').textContent=`${game.red} (Red)  vs  ${game.black} (Black) — move ${k} / ${game.plies}`;
-  if(withSound&&k>0){ f.capture?soundCapture():soundMove(); }
+  $('plyCount').textContent=`${k} / ${game.plies}`;
+  if(withSound&&k>0){
+    f.capture?soundCapture():soundMove();
+    // a big shift in the evaluation gets its own cue, so the curve is felt
+    const prev=game.frames[k-1].redCp;
+    if(Math.abs(prev)<25000 && Math.abs(f.redCp)<25000 && Math.abs(f.redCp-prev)>=300)
+      soundSwing(f.redCp>prev);
+  }
   if(f.over && k===game.frames.length-1) showGameOver(f);
   else $('gover').classList.remove('show'); }
 function step(){ if(idx>=game.frames.length-1){ stop(true); return; } showFrame(idx+1,true); timer=setTimeout(step,delayMs()); }
@@ -792,13 +1044,14 @@ function setMode(human){
   $('modePlayBtn').classList.toggle('on',human);
   $('watchControls').style.display=human?'none':'block';
   $('humanControls').style.display=human?'block':'none';
-  $('restartBtn').disabled=true; $('status').textContent='';
+  $('restartBtn').disabled=true;
   game=null; idx=0; lastDurationS=null;
   resetGameOver(); clearBoard();
   $('graphPanel').classList.add('empty');
   humanSide=$('sideSel').value;
   renderVersus();
-  $('plyLine').textContent=human?'Pick a side and an opponent, then press Start.':'Pick two models and press Play.';
+  say(human?'Pick a side and an opponent, then press Start.':'Pick two models and press Play.');
+  $('plyCount').textContent='—';
   if(startFrame){ renderPieces(startFrame,false); updateEval(startFrame); }
   resizeCanvas(); drawCurve(0);
 }
@@ -809,12 +1062,12 @@ $('humanStartBtn').addEventListener('click', async()=>{
   audio(); $('humanStartBtn').disabled=true; clearSel();
   humanSide=$('sideSel').value; const aiAgent=$('oppSel').value;
   renderVersus();
-  $('status').textContent='Starting…';
+  say('Starting…');
   try{
     const res=await fetch('/api/move',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'start',humanSide,aiAgent})});
     const d=await res.json();
-    if(d.error){ $('status').textContent='Error: '+d.error; return; }
+    if(d.error){ say('Error: '+d.error,true); return; }
     humanSessionId=d.sessionId;
     game={red:humanSide==='red'?'You':aiAgent, black:humanSide==='black'?'You':aiAgent, frames:[], plies:0};
     lastDurationS=null; resetGameOver(); clearBoard();
@@ -823,8 +1076,8 @@ $('humanStartBtn').addEventListener('click', async()=>{
     for(const f of d.frames){ game.frames.push(f); idx=game.frames.length-1; game.plies=idx; showFrame(idx,false); }
     humanTurn=!d.gameOver;
     $('restartBtn').disabled=true;
-    $('status').textContent=d.gameOver?'Game over.':'Your move — click a piece, then where to move it.';
-  }catch(e){ $('status').textContent='Request failed: '+e; }
+    say(d.gameOver?'Game over.':'Your move — click a piece, then where to move it.');
+  }catch(e){ say('Request failed: '+e,true); }
   finally{ $('humanStartBtn').disabled=false; }
 });
 
@@ -844,22 +1097,23 @@ grid.addEventListener('click', async(e)=>{
   const myRed=humanSide==='red';
   const p=pieceAt(cell.r,cell.c);
   if(!selFrom){
-    if(p && p.red===myRed){ selFrom=cell; place(ringSel,cell.c,cell.r); ringSel.classList.add('show'); }
+    if(p && p.red===myRed){ selFrom=cell; place(ringSel,cell.c,cell.r);
+      ringSel.classList.add('show'); soundSelect(); }
     return;
   }
   if(selFrom.r===cell.r && selFrom.c===cell.c){ clearSel(); return; }
-  if(p && p.red===myRed){ selFrom=cell; place(ringSel,cell.c,cell.r); return; }
+  if(p && p.red===myRed){ selFrom=cell; place(ringSel,cell.c,cell.r); soundSelect(); return; }
   const from=selFrom; clearSel(); awaitingMove=true; humanTurn=false;
-  $('status').textContent='Thinking…';
+  say('Thinking…');
   try{
     const res=await fetch('/api/move',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'move',sessionId:humanSessionId,fr:from.r,fc:from.c,tr:cell.r,tc:cell.c})});
     const d=await res.json();
-    if(d.error){ $('status').textContent=d.error; humanTurn=true; return; }
+    if(d.error){ say(d.error,true); soundIllegal(); humanTurn=true; return; }
     for(const f of d.frames){ game.frames.push(f); idx=game.frames.length-1; game.plies=idx; showFrame(idx,true); await sleep(380); }
     humanTurn=!d.gameOver;
-    $('status').textContent=d.gameOver?'Game over.':'Your move.';
-  }catch(err){ $('status').textContent='Request failed: '+err; humanTurn=true; }
+    say(d.gameOver?'Game over.':'Your move.');
+  }catch(err){ say('Request failed: '+err,true); humanTurn=true; }
   finally{ awaitingMove=false; }
 });
 function showLoading(on,red,black){ const el=$('loading');
@@ -870,16 +1124,16 @@ function showLoading(on,red,black){ const el=$('loading');
 $('playBtn').addEventListener('click',async()=>{
   audio(); stop(false); $('playBtn').disabled=true;
   const red=$('redSel').value, black=$('blackSel').value;
-  showLoading(true,red,black); $('status').textContent='Thinking…'; $('plyLine').textContent='…';
+  showLoading(true,red,black); say('Thinking…'); $('plyCount').textContent='—';
   try{
     const d=await (await fetch('/api/play',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({red,black})})).json();
-    if(d.error){ $('status').textContent='Error: '+d.error; return; }
+    if(d.error){ say('Error: '+d.error,true); return; }
     game=d; idx=0; $('srcTxt').textContent='eval: '+d.source;
     lastDurationS=((Date.now()-t0)/1000).toFixed(1);
-    $('status').textContent=`${d.plies} moves played in ${lastDurationS}s.`;
+    say(`${d.plies} moves played in ${lastDurationS}s.`);
     $('graphPanel').classList.remove('empty'); resetGameOver(); clearBoard();
     $('restartBtn').disabled=false; showFrame(0,false); start();
-  }catch(e){ $('status').textContent='Request failed: '+e; }
+  }catch(e){ say('Request failed: '+e,true); }
   finally{ showLoading(false); $('playBtn').disabled=false; }
 });
 
