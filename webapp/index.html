@@ -12,7 +12,8 @@
     --bg:#e6e6fa; --panel:#f4f4fe; --panel2:#ecebfb; --line:#1b1b2b;
     --ink:#1b1b2b; --muted:#5a5a74;
     --red:#e23b2e; --redsoft:#ff7a68; --blue:#3b5bdb; --bluesoft:#6b8cff;
-    --accent:#3b5bdb; --ok:#2ea043; --board:#d9a24a; --boardline:#17100a;
+    --accent:#3b5bdb; --ok:#2ea043; --boardline:#1b1b2b;
+    --cream:#faf8f0; --disc:#fffdf7; --gold:#c9a227;
     --pix:"Press Start 2P",monospace;
     --mono:"VT323",ui-monospace,monospace;
     --serif:"Noto Serif SC","Songti SC","STSong","SimSun","Microsoft YaHei",serif;
@@ -73,133 +74,224 @@
   #wipe.cover{transform:translateY(0)}
   #wipe.reveal{transform:translateY(100%)}
 
-  /* ───────── app chrome (pixel / lavender) ───────── */
-  header{padding:16px 22px;border-bottom:4px solid var(--line);
-    display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--panel)}
-  header h1{font-family:var(--pix);font-size:clamp(14px,2.2vw,20px);margin:0;letter-spacing:1px}
+  /* ───────── app chrome ─────────
+     One flat language, inherited from the landing screen: lavender ground,
+     ink keylines, hard offset shadows, no gradients and no gloss.
+     Type scale (only three steps, so nothing is ever 9px again):
+       pix 10px  — micro label, uppercase, letterspaced
+       pix 13px  — buttons and section titles
+       pix 18px  — the logo
+       mono 20px — body copy and numbers                                   */
+  header{padding:10px 18px;border-bottom:4px solid var(--line);background:var(--panel);
+    display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:20}
+  header h1{font-family:var(--pix);font-size:18px;margin:0;letter-spacing:1px;white-space:nowrap}
   header h1 .gpt{color:var(--accent)}
-  header .sub{color:var(--muted);font-size:19px}
   header .back{margin-left:auto;font-family:var(--pix);font-size:10px;color:var(--accent);
-    background:var(--bg);border:3px solid var(--accent);padding:10px 12px;cursor:pointer}
+    background:var(--bg);border:3px solid var(--accent);padding:9px 12px;cursor:pointer;
+    letter-spacing:1px}
   header .back:hover{background:var(--accent);color:#fff}
-  .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 48px}
-  .top{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:start}
-  @media (max-width:860px){.top{grid-template-columns:1fr}}
 
-  /* board */
-  .boardrow{display:flex;gap:14px;justify-content:center}
-  .evalbar{position:relative;width:22px;overflow:hidden;background:#d7d6f2;
-    border:3px solid var(--line);display:flex;flex-direction:column-reverse}
-  .evalbar .red{background:linear-gradient(var(--redsoft),var(--red));height:50%;transition:height .35s ease}
-  .evalbar .tick{position:absolute;left:0;right:0;top:50%;height:3px;background:var(--ink);opacity:.5}
-  /* honey-amber lacquered board with a thick bevelled frame */
-  .boardbox{position:relative;height:min(60vh,540px);aspect-ratio:9/10;border-radius:10px;
-    padding:8.4%;
-    background:
-      radial-gradient(130% 100% at 30% 8%,rgba(255,238,202,.42),rgba(255,238,202,0) 55%),
-      repeating-linear-gradient(90deg,rgba(90,55,15,.05) 0 2px,rgba(90,55,15,0) 2px 11px),
-      linear-gradient(150deg,#e3b05e 0%,#d59a3f 52%,#c6882d 100%);
-    box-shadow:
-      0 0 0 4px var(--line),
-      10px 12px 0 rgba(27,27,43,.25),
-      inset 0 3px 7px rgba(255,241,212,.55),
-      inset 0 -16px 34px rgba(120,70,20,.45);}
-  /* recessed flat playing field, slightly darker than the raised frame */
-  .grid{position:absolute;inset:8.4%;border-radius:3px;
-    background:linear-gradient(150deg,#d89f46,#cb9035);
-    box-shadow:
-      inset 0 0 0 1px rgba(60,38,12,.45),
-      inset 0 3px 8px rgba(80,48,12,.38),
-      0 1px 0 rgba(255,241,212,.5);}
+  /* segmented mode switch, centred in the header */
+  .modebar{display:flex;border:3px solid var(--line);background:var(--panel2)}
+  .modebar button{padding:9px 16px;border:none;background:transparent;color:var(--muted);
+    font-family:var(--pix);font-size:10px;letter-spacing:1px;cursor:pointer}
+  .modebar button.on{background:var(--accent);color:#fff}
+  .modebar button:not(:last-child){border-right:3px solid var(--line)}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 16px 28px}
+  .top{display:grid;grid-template-columns:auto 332px;gap:24px;align-items:start;
+    justify-content:center}
+  @media (max-width:900px){.top{grid-template-columns:1fr}
+    header{flex-wrap:wrap}.modebar{order:3;width:100%}}
+
+  /* ───────── the advantage meter ─────────
+     Promoted from a bare strip beside the board to the headline readout:
+     a framed horizontal bar the full width of the board, with both sides
+     named, a centre tick for parity, and the verdict sitting above it.   */
+  /* the meter, the board and the ply line share one column width so the
+     board column reads as a single stacked object rather than three
+     unrelated boxes of different sizes */
+  .boardcol{--boardw:min(54vh,486px);display:flex;flex-direction:column;align-items:center}
+  .boardcol > *{width:var(--boardw);max-width:100%}
+  .meter{background:var(--panel);border:4px solid var(--line);
+    box-shadow:6px 6px 0 rgba(27,27,43,.2);padding:10px 12px 11px;margin-bottom:14px}
+  .meterhead{display:flex;justify-content:space-between;align-items:baseline;
+    gap:10px;margin-bottom:7px;flex-wrap:wrap}
+  .meterhead .ttl{font-family:var(--pix);font-size:10px;letter-spacing:1px;color:var(--muted)}
+  .meterhead .verdict{font-size:19px;font-weight:700;text-align:right;flex:1;min-width:0}
+  .evalbar{position:relative;height:22px;background:var(--bluesoft);
+    border:3px solid var(--line);overflow:hidden}
+  .evalbar .red{height:100%;width:50%;background:var(--red);transition:width .35s ease}
+  .evalbar .tick{position:absolute;top:0;bottom:0;left:50%;width:3px;
+    background:var(--ink);opacity:.55;transform:translateX(-1px)}
+  .meterfoot{display:flex;justify-content:space-between;margin-top:6px;
+    font-family:var(--pix);font-size:10px;letter-spacing:1px}
+  .meterfoot .l{color:var(--red)} .meterfoot .r{color:var(--blue)}
+
+  /* ───────── board: flat, keyline-drawn, no wood and no gloss ───────── */
+  .boardbox{position:relative;aspect-ratio:9/10;
+    padding:7.5%;background:var(--cream);border:4px solid var(--line);
+    box-shadow:8px 8px 0 rgba(27,27,43,.2)}
+  /* The playing field is 8 column gaps x 9 row gaps, so it must be exactly
+     8:9 — stated as an aspect-ratio rather than as percentage insets, which
+     would drift with .boardbox's border. Getting this exactly right is what
+     makes the SVG scale uniformly (equal stroke width on both axes) AND puts
+     the pieces, which are positioned in % of this box, dead on the
+     intersections. */
+  .grid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:85%;aspect-ratio:8/9}
   .grid svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
   .river{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
     display:flex;justify-content:space-between;align-items:center;padding:0 7%;
-    font-family:var(--serif);font-weight:700;font-size:clamp(14px,3.3vmin,28px);
-    letter-spacing:.35em;color:rgba(20,13,6,.80);pointer-events:none;user-select:none}
+    font-family:var(--serif);font-weight:700;font-size:clamp(13px,3vmin,24px);
+    letter-spacing:.35em;color:rgba(27,27,43,.42);pointer-events:none;user-select:none}
 
-  /* thick ebony-wood disc; the two sides differ only by the carved colour */
-  .piece{position:absolute;width:10.8%;aspect-ratio:1;transform:translate(-50%,-50%);
+  /* flat two-tone disc: the side is carried by colour, not by material.
+     Position lives entirely in `transform` (set from JS in px) so moving a
+     piece is a compositor-only change — animating left/top would re-run
+     layout on every frame of every move. */
+  .piece{position:absolute;left:0;top:0;width:11%;aspect-ratio:1;
     border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-family:var(--serif);font-weight:900;font-size:clamp(13px,3.6vmin,29px);
-    line-height:1;user-select:none;z-index:2;
-    background:
-      radial-gradient(circle at 50% 118%,rgba(0,0,0,.45),rgba(0,0,0,0) 58%),
-      radial-gradient(circle at 38% 30%,#574a3f 0%,#3a2f26 46%,#241b14 74%,#150e09 100%);
-    box-shadow:
-      inset 0 2px 3px rgba(255,236,205,.22),
-      inset 0 -6px 11px rgba(0,0,0,.6),
-      0 4px 0 #120c07,
-      0 6px 3px rgba(0,0,0,.35),
-      0 11px 15px rgba(0,0,0,.5);}
-  .piece::before{content:"";position:absolute;inset:9%;border-radius:50%;
-    border:1px solid rgba(0,0,0,.5);box-shadow:inset 0 1px 1px rgba(255,236,205,.14)}
-  .piece::after{content:"";position:absolute;inset:0;border-radius:50%;
-    background:radial-gradient(circle at 36% 22%,rgba(255,240,215,.26),rgba(255,240,215,0) 46%);
-    pointer-events:none}
-  .piece.red{color:#d8291b;text-shadow:0 1px 1px rgba(0,0,0,.7),0 0 2px rgba(216,41,27,.45)}
-  .piece.black{color:#e8bd43;text-shadow:0 1px 1px rgba(0,0,0,.72),0 0 2px rgba(232,189,67,.4)}
-  .ring{position:absolute;width:11.8%;aspect-ratio:1;transform:translate(-50%,-50%);
-    border-radius:50%;border:3px solid var(--accent);pointer-events:none;opacity:0;transition:opacity .2s;z-index:1}
-  .ring.to{border-color:var(--ok);box-shadow:0 0 12px rgba(46,160,67,.6)}
+    font-family:var(--serif);font-weight:900;font-size:clamp(13px,3.5vmin,27px);
+    line-height:1;user-select:none;z-index:2;background:var(--disc);
+    border:3px solid var(--line);box-shadow:2px 2px 0 rgba(27,27,43,.28);
+    will-change:transform}
+  /* a captured piece leaves instead of vanishing mid-slide */
+  .piece.dying{transition:opacity .13s linear;opacity:0;z-index:1}
+  .piece.red{color:var(--red);border-color:var(--red)}
+  .piece.black{color:var(--blue);border-color:var(--blue)}
+  .ring{position:absolute;width:13%;aspect-ratio:1;transform:translate(-50%,-50%);
+    border-radius:50%;border:3px solid var(--accent);pointer-events:none;
+    opacity:0;transition:opacity .15s;z-index:1}
+  .ring.to{border-color:var(--ok)}
+  .ring.sel{border-color:var(--gold);border-width:4px}
   .ring.show{opacity:1}
-  .loading{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
-    gap:14px;background:rgba(230,230,250,.86);border-radius:10px;z-index:5}
+  /* the General under attack: a 2-frame blink, not a smooth pulse — this is a
+     pixel UI, so state changes are stepped */
+  .ring.chk{border-color:var(--red);border-width:5px;width:15%;
+    animation:chkblink .62s steps(2) infinite}
+  @keyframes chkblink{50%{opacity:.15}}
+
+  /* "CHECK!" toast over the board */
+  .toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);
+    font-family:var(--pix);font-size:13px;letter-spacing:1px;color:#fff;
+    background:var(--red);border:3px solid var(--line);padding:9px 14px;
+    box-shadow:4px 4px 0 rgba(27,27,43,.3);z-index:6;opacity:0;
+    pointer-events:none;transition:opacity .1s steps(2)}
+  .toast.show{opacity:1}
+
+  /* ───────── game over ─────────
+     The match needs an ending. Without this the board just stops moving and
+     the viewer is left guessing who won and why. */
+  .gover{position:absolute;inset:0;display:none;align-items:center;
+    justify-content:center;padding:18px;z-index:7;
+    background:rgba(230,230,250,.93)}
+  .gover.show{display:flex;animation:goin .18s steps(3)}
+  @keyframes goin{from{opacity:0}to{opacity:1}}
+  .gocard{width:100%;max-width:330px;text-align:center;background:var(--panel);
+    border:4px solid var(--line);box-shadow:8px 8px 0 rgba(27,27,43,.28);
+    padding:18px 16px 16px}
+  .goban{font-family:var(--pix);font-size:16px;letter-spacing:1px;line-height:1.5;
+    padding:10px 6px;border:3px solid var(--line);color:#fff;background:var(--ink)}
+  .goban.red{background:var(--red)} .goban.black{background:var(--blue)}
+  .gowhy{font-size:19px;color:var(--muted);margin-top:10px}
+  .gowho{display:flex;align-items:center;justify-content:center;gap:9px;
+    margin-top:12px;font-size:19px;font-weight:700}
+  .gowho svg{width:32px;height:32px;display:block}
+  .gostats{font-size:18px;color:var(--muted);margin-top:10px;line-height:1.5}
+  .gosec{width:100%;margin-top:9px;padding:10px;border:3px solid var(--line);
+    background:var(--panel2);color:var(--ink);font:inherit;font-size:18px;cursor:pointer}
+  .gosec:hover{background:#e0dff7}
+
+  /* ───────── focus ─────────
+     One ring, everywhere. Without this the whole app is unusable by keyboard,
+     which also makes it unusable from a podium with a clicker. */
+  :where(button,select,input,a,[tabindex]):focus-visible{
+    outline:3px solid var(--gold);outline-offset:2px}
+
+  /* respect the OS setting: no shake, no blink, no slides */
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;
+      animation-iteration-count:1!important;transition-duration:.01ms!important}
+  }
+
+  .loading{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;
+    justify-content:center;gap:14px;background:rgba(230,230,250,.9);z-index:5}
   .loading.show{display:flex}
-  .spinner{width:46px;height:46px;border:5px solid var(--panel2);
+  .spinner{width:42px;height:42px;border:5px solid var(--panel2);
     border-top-color:var(--accent);animation:spin .8s steps(8) infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .loading .txt{color:var(--ink);font-size:20px;text-align:center;max-width:76%}
   .loading .elapsed{color:var(--muted);font-size:18px}
-  .plyline{text-align:center;color:var(--muted);font-size:19px;margin-top:12px}
+  .plyline{text-align:center;color:var(--muted);font-size:19px;margin-top:10px}
 
-  /* panel (pixel card) */
-  .panel{background:var(--panel);border:4px solid var(--line);padding:18px;
-    box-shadow:8px 8px 0 rgba(27,27,43,.22)}
-  .vs{display:flex;align-items:center;gap:8px;font-size:21px}
-  .vs .dot{width:12px;height:12px}
-  .dot.red{background:var(--red)}.dot.black{background:#111}
-  label.fld{display:block;font-family:var(--pix);font-size:9px;color:var(--muted);margin:14px 0 7px;letter-spacing:.5px}
-  select{width:100%;padding:11px 10px;background:var(--panel2);color:var(--ink);
+  /* ───────── panels ───────── */
+  .panel{background:var(--panel);border:4px solid var(--line);padding:16px;
+    box-shadow:8px 8px 0 rgba(27,27,43,.2)}
+  .panel + .panel{margin-top:16px}
+  .ptitle{font-family:var(--pix);font-size:10px;letter-spacing:1px;color:var(--muted);
+    margin:0 0 12px}
+
+  /* ───────── the versus card: who is actually playing ─────────
+     Replaces the old "two Model dropdowns" form. Each side is a fighter
+     tile: pixel sigil, side, agent name, persona and the measured Elo.  */
+  .versus{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch}
+  .fighter{background:var(--panel2);border:3px solid var(--line);padding:10px 8px;
+    text-align:center;min-width:0}
+  .fighter.red{border-color:var(--red)}
+  .fighter.black{border-color:var(--blue)}
+  .fighter .sigil{width:46px;height:46px;margin:0 auto 7px;display:block;image-rendering:pixelated}
+  .fighter .who{font-family:var(--pix);font-size:10px;letter-spacing:1px;margin-bottom:5px}
+  .fighter.red .who{color:var(--red)} .fighter.black .who{color:var(--blue)}
+  .fighter .persona{font-size:19px;font-weight:700;line-height:1.15;
+    overflow-wrap:anywhere}
+  .fighter .model{font-size:16px;color:var(--muted);line-height:1.2;margin-top:2px;
+    overflow-wrap:anywhere}
+  .fighter .elo{display:inline-block;margin-top:7px;padding:2px 7px;background:var(--ink);
+    color:var(--bg);font-family:var(--pix);font-size:9px;letter-spacing:.5px}
+  .vsmark{align-self:center;font-family:var(--pix);font-size:13px;color:var(--muted)}
+
+  label.fld{display:block;font-family:var(--pix);font-size:10px;color:var(--muted);
+    margin:14px 0 6px;letter-spacing:1px}
+  select{width:100%;padding:10px;background:var(--panel2);color:var(--ink);
     border:3px solid var(--line);font:inherit;font-size:19px;cursor:pointer}
-  .playbtn{width:100%;margin-top:18px;padding:15px;border:3px solid var(--line);
-    background:var(--accent);color:#fff;font-family:var(--pix);font-size:12px;cursor:pointer;
-    box-shadow:5px 5px 0 var(--line);transition:transform .05s,box-shadow .05s}
+  .playbtn{width:100%;margin-top:16px;padding:14px;border:3px solid var(--line);
+    background:var(--accent);color:#fff;font-family:var(--pix);font-size:13px;cursor:pointer;
+    letter-spacing:1px;box-shadow:5px 5px 0 var(--line);transition:transform .05s,box-shadow .05s}
   .playbtn:hover{filter:brightness(1.08)}
   .playbtn:active{transform:translate(5px,5px);box-shadow:0 0 0}
-  .playbtn:disabled{opacity:.5;cursor:default;box-shadow:5px 5px 0 var(--line)}
+  .playbtn:disabled{opacity:.45;cursor:default;box-shadow:5px 5px 0 var(--line)}
   .row{display:flex;gap:10px;margin-top:12px}
-  .row button{flex:1;padding:11px;border:3px solid var(--line);background:var(--panel2);
+  .row button{flex:1;padding:10px;border:3px solid var(--line);background:var(--panel2);
     color:var(--ink);cursor:pointer;font:inherit;font-size:18px}
   .row button:hover{background:#e0dff7}
-  .row button:disabled{opacity:.45;cursor:default}
-  .speed{margin-top:16px}
+  .row button:disabled{opacity:.4;cursor:default}
+  .speed{margin-top:14px}
   input[type=range]{width:100%;accent-color:var(--accent)}
-  .toggle{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:19px;color:var(--muted)}
-  .status{margin-top:10px;font-size:18px;color:var(--muted);min-height:20px}
+  .toggle{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:18px;color:var(--muted)}
+  .keyhint{margin-top:12px;padding-top:10px;border-top:2px solid var(--panel2);
+    font-size:16px;color:var(--muted)}
 
-  /* mode toggle + human-vs-AI controls */
-  .modebar{display:flex;gap:0;margin-bottom:16px;border:3px solid var(--line)}
-  .modebar button{flex:1;padding:11px 8px;border:none;background:var(--panel2);
-    color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
-  .modebar button.on{background:var(--accent);color:#fff}
-  .modebar button:not(:last-child){border-right:3px solid var(--line)}
-  .charcard{margin-top:8px;font-size:17px;color:var(--muted)}
-  .charcard b{color:var(--ink)}
-  .piece.selectable{cursor:pointer}
-  .piece.mine:hover{filter:brightness(1.18)}
-  .ring.sel{border-color:#caa23a;box-shadow:0 0 12px rgba(202,162,58,.6)}
+  /* status reads as the game talking back to you, not as form helper text */
+  .status{margin-top:14px;padding:10px 12px;background:var(--panel2);
+    border:3px solid var(--line);font-size:19px;color:var(--ink);min-height:44px}
+  .status:empty{display:none}
 
-  /* big eval graph */
-  .graphpanel{margin-top:22px;background:var(--panel);border:4px solid var(--line);padding:18px;
-    box-shadow:8px 8px 0 rgba(27,27,43,.22)}
-  .graphhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;flex-wrap:wrap;gap:8px}
-  .graphhead .title{font-family:var(--pix);font-size:11px}
-  .graphhead .verdict{font-size:22px;font-weight:700}
-  canvas{width:100%;height:230px;display:block;background:#f4f4fe;
-    border:3px solid var(--line)}
-  .legend{display:flex;gap:18px;font-size:18px;color:var(--muted);margin-top:12px;flex-wrap:wrap}
+  /* ───────── advantage curve ───────── */
+  .graphpanel{margin-top:16px;background:var(--panel);border:4px solid var(--line);
+    padding:14px 16px 16px;box-shadow:8px 8px 0 rgba(27,27,43,.2)}
+  .graphhead{display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:10px;flex-wrap:wrap;gap:8px}
+  .graphhead .title{font-family:var(--pix);font-size:10px;letter-spacing:1px;color:var(--muted)}
+  canvas{width:100%;height:150px;display:block;background:var(--panel2);
+    border:3px solid var(--line);transition:height .24s ease}
+  /* before a game exists the curve has nothing to say, so it shrinks out of
+     the way instead of sitting there as the largest empty box on the page */
+  .graphpanel.empty canvas{height:72px}
+  .graphpanel.empty .legend{display:none}
+  .legend{display:flex;gap:16px;font-size:17px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
   .legend span{display:flex;align-items:center;gap:6px}
-  .sw{width:14px;height:14px}
+  .sw{width:13px;height:13px;border:2px solid var(--line)}
 </style>
 </head>
 <body>
@@ -226,44 +318,69 @@
 <section id="app">
 <header>
   <h1>XIANGQI<span class="gpt">MASTER</span></h1>
-  <span class="sub">Watch two AIs play, or play one yourself — the graph shows who's ahead, move by move</span>
+  <div class="modebar">
+    <button id="modeWatchBtn" class="on">Watch AI vs AI</button>
+    <button id="modePlayBtn">Play vs AI</button>
+  </div>
   <button class="back" id="backBtn">&#9664; menu</button>
 </header>
 
 <div class="wrap">
   <div class="top">
-    <!-- board -->
-    <div>
-      <div class="boardrow">
-        <div class="evalbar" title="Advantage (red = Red winning)"><div class="red" id="evalRed"></div><div class="tick"></div></div>
-        <div class="boardbox">
-          <div class="grid" id="grid">
-            <div class="river"><span>楚&nbsp;河</span><span>漢&nbsp;界</span></div>
-          </div>
-          <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <div class="txt" id="loadTxt">The models are playing the game out…</div>
-            <div class="elapsed" id="elapsed"></div>
+    <!-- board column -->
+    <div class="boardcol">
+      <div class="meter">
+        <div class="meterhead">
+          <span class="ttl">WHO IS AHEAD</span>
+          <span class="verdict" id="verdict">—</span>
+        </div>
+        <div class="evalbar" title="Advantage — red fills right as Red takes over">
+          <div class="red" id="evalRed"></div><div class="tick"></div>
+        </div>
+        <div class="meterfoot"><span class="l">RED</span><span class="r">BLACK</span></div>
+      </div>
+
+      <div class="boardbox">
+        <div class="grid" id="grid">
+          <div class="river"><span>楚&nbsp;河</span><span>漢&nbsp;界</span></div>
+        </div>
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <div class="txt" id="loadTxt">The models are playing the game out…</div>
+          <div class="elapsed" id="elapsed"></div>
+        </div>
+        <div class="toast" id="toast" role="status" aria-live="assertive"></div>
+        <div class="gover" id="gover" role="dialog" aria-modal="true" aria-labelledby="goBanner">
+          <div class="gocard">
+            <div class="goban" id="goBanner">DRAW</div>
+            <div class="gowhy" id="goWhy"></div>
+            <div class="gowho" id="goWho"></div>
+            <div class="gostats" id="goStats"></div>
+            <button class="playbtn" id="goAgain">&#8635; REMATCH</button>
+            <button class="gosec" id="goClose">Review the game</button>
           </div>
         </div>
       </div>
       <div class="plyline" id="plyLine">Pick two models and press Play.</div>
     </div>
 
-    <!-- controls -->
-    <div class="panel">
-      <div class="modebar">
-        <button id="modeWatchBtn" class="on">Watch AI vs AI</button>
-        <button id="modePlayBtn">Play vs AI</button>
+    <!-- controls column -->
+    <div>
+      <div class="panel">
+        <p class="ptitle">TODAY'S MATCH</p>
+        <div class="versus">
+          <div class="fighter red" id="fighterRed"></div>
+          <div class="vsmark">VS</div>
+          <div class="fighter black" id="fighterBlack"></div>
+        </div>
       </div>
 
+      <div class="panel">
       <!-- Watch AI vs AI (existing behaviour, untouched) -->
       <div id="watchControls">
-        <div class="vs"><span class="dot red"></span><strong>Red</strong><span class="sub" style="color:var(--muted);font-size:17px">(moves first)</span></div>
-        <label class="fld" for="redSel">Model</label>
+        <label class="fld" for="redSel">Red plays (moves first)</label>
         <select id="redSel"></select>
-        <div class="vs" style="margin-top:16px"><span class="dot black"></span><strong>Black</strong></div>
-        <label class="fld" for="blackSel">Model</label>
+        <label class="fld" for="blackSel">Black plays</label>
         <select id="blackSel"></select>
         <button class="playbtn" id="playBtn">&#9654; PLAY GAME</button>
         <div class="row">
@@ -275,35 +392,34 @@
           <input type="range" id="speed" min="1" max="10" value="6" />
         </div>
         <label class="toggle"><input type="checkbox" id="sound" checked /> Sound effects</label>
+        <div class="keyhint">Space pause · &#8592; &#8594; step · R restart</div>
       </div>
 
       <!-- Play vs AI (new) -->
       <div id="humanControls" style="display:none">
         <label class="fld" for="sideSel">Your side</label>
         <select id="sideSel"><option value="red">Red (you move first)</option><option value="black">Black</option></select>
-        <label class="fld" for="oppSel">Opponent</label>
+        <label class="fld" for="oppSel">Your opponent</label>
         <select id="oppSel"></select>
-        <div class="charcard" id="oppCard"></div>
         <button class="playbtn" id="humanStartBtn">&#9654; START GAME</button>
-        <div class="plyline" id="turnLine" style="text-align:left;margin-top:14px"></div>
       </div>
 
-      <div class="status" id="status"></div>
+        <div class="status" id="status"></div>
+      </div>
     </div>
   </div>
 
-  <!-- big advantage graph -->
-  <div class="graphpanel">
+  <!-- advantage curve over the whole game -->
+  <div class="graphpanel empty" id="graphPanel">
     <div class="graphhead">
       <span class="title">ADVANTAGE OVER THE GAME</span>
-      <span class="verdict" id="verdict">—</span>
+      <span id="srcTxt" class="title"></span>
     </div>
-    <canvas id="chart" width="1100" height="230"></canvas>
+    <canvas id="chart" width="1100" height="150"></canvas>
     <div class="legend">
       <span><span class="sw" style="background:var(--red)"></span>Red ahead</span>
       <span><span class="sw" style="background:var(--blue)"></span>Black ahead</span>
-      <span>Height = size of the lead · the line is the AI's own read of the position</span>
-      <span id="srcTxt"></span>
+      <span>Height = size of the lead, read by the engine after every move</span>
     </div>
   </div>
 </div>
@@ -317,11 +433,15 @@ const grid=$('grid');
 function buildGrid(){
   const ns='http://www.w3.org/2000/svg';
   const svg=document.createElementNS(ns,'svg');
-  svg.setAttribute('viewBox','0 0 8 9'); svg.setAttribute('preserveAspectRatio','none');
+  // No preserveAspectRatio override: .grid is already 8:9, so the viewBox maps
+  // onto it with a single uniform scale and every stroke keeps one width.
+  // Forcing 'none' here stretched X and Y differently, which is why the
+  // horizontal lines used to come out thinner than the vertical ones.
+  svg.setAttribute('viewBox','0 0 8 9');
   const line=(x1,y1,x2,y2,w,col)=>{const l=document.createElementNS(ns,'line');
     l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);
     l.setAttribute('stroke',col||'var(--boardline)');l.setAttribute('stroke-width',w||.05);
-    l.setAttribute('stroke-linecap','round');svg.appendChild(l);};
+    l.setAttribute('stroke-linecap','square');svg.appendChild(l);};
   for(let r=0;r<ROWS;r++) line(0,r,8,r);
   for(let c=0;c<COLS;c++){ if(c===0||c===8) line(c,0,c,9); else {line(c,0,c,4);line(c,5,c,9);} }
   line(3,0,5,2);line(5,0,3,2);line(3,7,5,9);line(5,7,3,9);
@@ -338,7 +458,7 @@ const xpct=c=>c/(COLS-1)*100, ypct=r=>(ROWS-1-r)/(ROWS-1)*100;
 let game=null, idx=0, playing=false, timer=null, loadTimer=null, t0=0;
 const pieceLayer=document.createElement('div');
 pieceLayer.style.position='absolute';pieceLayer.style.inset='0';pieceLayer.style.zIndex=2;
-const ringFrom=mk('from'), ringTo=mk('to'), ringSel=mk('sel');
+const ringFrom=mk('from'), ringTo=mk('to'), ringSel=mk('sel'), ringChk=mk('chk');
 function mk(cls){const d=document.createElement('div');d.className='ring '+cls;grid.appendChild(d);return d;}
 
 /* human-vs-AI state */
@@ -374,31 +494,91 @@ function soundCapture(){ if(!snd())return;
   noise(0.22,0.38);                       // crunch / smash
   blip(900,0.11,'square',0.16,0.0);       // metallic clash
   blip(1350,0.09,'square',0.11,0.05); }
+/* check: a two-note alert, pitched to cut through the move clacks */
+function soundCheck(){ if(!snd())return; blip(880,0.09,'square',0.15); blip(1245,0.13,'square',0.15,0.1); }
 function soundWin(){ if(!snd())return; [523,659,784,1047].forEach((f,i)=>blip(f,0.2,'triangle',0.15,i*0.11)); }
+/* a draw ends flat, not triumphant */
+function soundDraw(){ if(!snd())return; [523,440].forEach((f,i)=>blip(f,0.26,'triangle',0.13,i*0.16)); }
 /* 8-bit chiptune blips for the intro */
 function soundStart(){ if(!snd())return; [392,523,659,880].forEach((f,i)=>blip(f,0.12,'square',0.16,i*0.07)); }
 function soundArrive(){ if(!snd())return; [659,880].forEach((f,i)=>blip(f,0.18,'square',0.16,i*0.09)); }
 function tick(){ if(!snd())return; blip(140+Math.random()*40,0.03,'square',0.08); }
 
-/* rendering */
+/* ───────── board geometry ─────────
+   Pieces are positioned with `transform` in pixels, so we need the grid's live
+   pixel size. A ResizeObserver keeps it current — cheaper and more reliable
+   than a window resize listener, since the board also changes size when the
+   layout reflows. */
+let gw=0, gh=0, curFrame=null;
+function pxOf(c,r){ return [ c/(COLS-1)*gw, (ROWS-1-r)/(ROWS-1)*gh ]; }
+function setPos(el,c,r){
+  const [x,y]=pxOf(c,r);
+  el.style.transform=`translate(calc(${x.toFixed(1)}px - 50%), calc(${y.toFixed(1)}px - 50%))`;
+}
+
+/* ───────── rendering: diff, never rebuild ─────────
+   Every piece carries a stable id from the server, so a ply is "one element
+   changes its transform, one element fades out" instead of "destroy and
+   recreate all 32 divs". That is what makes a real move animation possible —
+   and it is the foundation the capture effect will sit on. */
+const pieceEls=new Map();   // piece id -> element
+function clearBoard(){ pieceEls.clear(); pieceLayer.innerHTML=''; curFrame=null; }
 function renderPieces(frame,animate){
-  pieceLayer.innerHTML=''; const m=frame.move;
+  curFrame=frame;
+  const live=new Set();
   for(const p of frame.pieces){
-    const el=document.createElement('div');
-    el.className='piece '+(p.red?'red':'black'); el.textContent=p.t;
-    const mover=animate&&m&&p.r===m.tr&&p.c===m.tc;
-    if(mover){ el.style.transition='none'; el.style.left=xpct(m.fc)+'%'; el.style.top=ypct(m.fr)+'%';
+    live.add(p.id);
+    let el=pieceEls.get(p.id);
+    if(!el){
+      el=document.createElement('div');
+      el.className='piece '+(p.red?'red':'black');
+      el.textContent=p.t;
+      el.style.transition='none';
+      setPos(el,p.c,p.r);
       pieceLayer.appendChild(el);
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        el.style.transition='left .26s ease,top .26s ease';
-        el.style.left=xpct(p.c)+'%'; el.style.top=ypct(p.r)+'%'; })); }
-    else { el.style.transition='none'; el.style.left=xpct(p.c)+'%'; el.style.top=ypct(p.r)+'%'; pieceLayer.appendChild(el); }
+      pieceEls.set(p.id,el);
+    }else{
+      el.style.transition=animate?'transform .2s cubic-bezier(.2,.9,.25,1)':'none';
+      setPos(el,p.c,p.r);
+    }
   }
+  for(const [id,el] of [...pieceEls]){          // whatever is gone was captured
+    if(live.has(id)) continue;
+    pieceEls.delete(id);
+    if(animate){ el.classList.add('dying'); setTimeout(()=>el.remove(),150); }
+    else el.remove();
+  }
+  const m=frame.move;
   if(m){ place(ringFrom,m.fc,m.fr); place(ringTo,m.tc,m.tr); ringFrom.classList.add('show'); ringTo.classList.add('show'); }
   else { ringFrom.classList.remove('show'); ringTo.classList.remove('show'); }
+  applyStatus(frame,animate);
 }
 const place=(ring,c,r)=>{ring.style.left=xpct(c)+'%';ring.style.top=ypct(r)+'%';};
-function updateEval(f){ $('evalRed').style.height=(f.fill*100).toFixed(1)+'%';
+function repositionAll(){
+  if(!curFrame) return;
+  for(const p of curFrame.pieces){
+    const el=pieceEls.get(p.id);
+    if(el){ el.style.transition='none'; setPos(el,p.c,p.r); }
+  }
+}
+new ResizeObserver(()=>{ const r=grid.getBoundingClientRect();
+  gw=r.width; gh=r.height; repositionAll(); }).observe(grid);
+
+/* ───────── check ─────────
+   The server reports whether the side to move is in check and where its
+   General stands; the board points at it and says so out loud. */
+let toastTimer=null;
+function flashToast(text){
+  const t=$('toast'); t.textContent=text; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1100);
+}
+function applyStatus(frame,announce){
+  const pos=frame.checkPos;
+  if(pos && (frame.check||frame.over)){ place(ringChk,pos.c,pos.r); ringChk.classList.add('show'); }
+  else ringChk.classList.remove('show');
+  if(frame.check && announce){ flashToast('CHECK!'); soundCheck(); }
+}
+function updateEval(f){ $('evalRed').style.width=(f.fill*100).toFixed(1)+'%';
   const cp=f.redCp, extra=f.mate?'':(cp>=0?`  (+${cp} cp)`:`  (−${-cp} cp)`);
   const col=cp>0?'var(--red)':cp<0?'var(--blue)':'var(--muted)';
   $('verdict').innerHTML=`<span style="color:${col}">${f.label}${extra}</span>`; }
@@ -415,9 +595,14 @@ function drawCurve(upto){
   cx.strokeStyle='rgba(27,27,43,.07)';cx.lineWidth=1;
   for(let i=1;i<4;i++){const y=H*i/4;cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();}
   cx.strokeStyle='rgba(27,27,43,.28)';cx.beginPath();cx.moveTo(0,mid);cx.lineTo(W,mid);cx.stroke();
-  cx.fillStyle='rgba(27,27,43,.5)';cx.font='12px monospace';
+  cx.font='10px "Press Start 2P",monospace';
+  if(!game){                      // empty state: say what will appear here
+    cx.fillStyle='rgba(27,27,43,.42)';cx.textAlign='center';
+    cx.fillText('PRESS PLAY — THE CURVE DRAWS HERE',W/2,mid+4);
+    cx.textAlign='left'; return;
+  }
+  cx.fillStyle='rgba(27,27,43,.5)';
   cx.fillText('Red winning',8,16); cx.fillText('Black winning',8,H-8);
-  if(!game){return;}
   const n=game.frames.length, step=W/Math.max(n-1,1);
   const pts=[]; for(let i=0;i<=upto;i++) pts.push([i*step,yOf(game.frames[i].redCp,H)]);
   if(pts.length<2){ return; }
@@ -438,21 +623,104 @@ function drawCurve(upto){
   cx.strokeStyle='#1b1b2b';cx.lineWidth=2;cx.stroke();
 }
 
+/* ───────── game over ─────────
+   A match that merely stops moving reads as a bug. This names the winner, says
+   how it ended, shows who was behind that agent, and offers the next action. */
+let goDismissed=false, lastDurationS=null;
+function resetGameOver(){ $('gover').classList.remove('show'); goDismissed=false; }
+function biggestSwing(){
+  if(!game||game.frames.length<3) return null;
+  let best=0, at=0;
+  for(let i=1;i<game.frames.length;i++){
+    const before=game.frames[i-1].redCp, after=game.frames[i].redCp;
+    // Ignore any step that touches a mate score (±30000): the jump into a
+    // forced mate dwarfs every real swing and would always "win" this.
+    if(Math.abs(before)>=25000||Math.abs(after)>=25000) continue;
+    const d=Math.abs(after-before);
+    if(d>best){ best=d; at=i; }
+  }
+  return best>=150?{at,delta:Math.round(best)}:null;
+}
+function showGameOver(f){
+  if(goDismissed) return;
+  const winner=f.result;                          // 'red' | 'black' | 'draw'
+  const name=winner==='red'?game.red:winner==='black'?game.black:null;
+  const ban=$('goBanner');
+  ban.className='goban'+(winner==='draw'?'':' '+winner);
+  ban.textContent=winner==='draw'?'DRAW':(winner==='red'?'RED WINS':'BLACK WINS');
+  $('goWhy').textContent={
+    checkmate:'by checkmate',
+    stalemate:'by stalemate — no legal move left',
+    'move limit':`drawn at the ${game.plies}-move limit`,
+  }[f.reason]||'';
+  const ch=name?(agentChars[name]||{}):{};
+  $('goWho').innerHTML = name
+    ? (sigilSvg(ch.persona, winner==='red'?'#e23b2e':'#3b5bdb')||'')
+      + `<span>${ch.persona?ch.persona+' · ':''}${name}</span>`
+    : '';
+  const sw=biggestSwing();
+  $('goStats').innerHTML=`${game.plies} moves`
+    + (lastDurationS?` · played in ${lastDurationS}s`:'')
+    + (sw?`<br>biggest swing at move ${sw.at} (${sw.delta} cp)`:'');
+  $('gover').classList.add('show');
+  (winner==='draw'?soundDraw:soundWin)();
+  $('goAgain').focus();
+}
+$('goClose').addEventListener('click',()=>{ $('gover').classList.remove('show'); goDismissed=true; });
+$('goAgain').addEventListener('click',()=>{
+  resetGameOver(); (humanMode?$('humanStartBtn'):$('playBtn')).click(); });
+
 /* playback */
 function showFrame(k,withSound){ idx=k; const f=game.frames[k];
   renderPieces(f,withSound); updateEval(f); drawCurve(k);
   $('plyLine').textContent=`${game.red} (Red)  vs  ${game.black} (Black) — move ${k} / ${game.plies}`;
-  if(withSound&&k>0){ f.capture?soundCapture():soundMove(); } }
+  if(withSound&&k>0){ f.capture?soundCapture():soundMove(); }
+  if(f.over && k===game.frames.length-1) showGameOver(f);
+  else $('gover').classList.remove('show'); }
 function step(){ if(idx>=game.frames.length-1){ stop(true); return; } showFrame(idx+1,true); timer=setTimeout(step,delayMs()); }
 function start(){ playing=true;$('ppBtn').textContent='⏸ Pause';$('ppBtn').disabled=false;
-  if(idx>=game.frames.length-1) idx=0; step(); }
-function stop(won){ playing=false;clearTimeout(timer);$('ppBtn').textContent='▶ Resume'; if(won) soundWin(); }
+  if(idx>=game.frames.length-1){ resetGameOver(); idx=0; showFrame(0,false); } step(); }
+// the end-of-game fanfare is played by showGameOver, so that the sound and the
+// banner land together rather than one playback tick apart
+function stop(){ playing=false;clearTimeout(timer);$('ppBtn').textContent='▶ Resume'; }
 
 /* controls */
 $('speed').addEventListener('input',setSpeedTxt);
 $('ppBtn').addEventListener('click',()=>{ if(game) (playing?stop(false):start()); });
-$('restartBtn').addEventListener('click',()=>{ if(!game)return; stop(false); idx=0; showFrame(0,false); start(); });
-window.addEventListener('resize',()=>{ resizeCanvas(); drawCurve(idx); });
+$('restartBtn').addEventListener('click',()=>{ if(!game)return;
+  stop(false); resetGameOver(); idx=0; showFrame(0,false); start(); });
+// the canvas changes height when the curve panel expands out of its empty
+// state, so observe it rather than listening for window resizes only
+new ResizeObserver(()=>{ resizeCanvas(); drawCurve(idx); }).observe(chart);
+// the curve's labels use the pixel face; draw again once it has loaded
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>drawCurve(idx));
+
+/* ───────── keyboard ─────────
+   Presenting from a podium means driving this without aiming a mouse at small
+   buttons. Everything the demo needs is one key away. */
+document.addEventListener('keydown',(e)=>{
+  if(!$('app').classList.contains('show')) return;
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  const tag=(e.target.tagName||'').toLowerCase();
+  if(tag==='input'||tag==='select'||tag==='textarea') return;
+  const atEnd=()=>game&&idx>=game.frames.length-1;
+  switch(e.key){
+    case ' ': case 'Spacebar':
+      if(game&&!humanMode){ e.preventDefault(); playing?stop(false):start(); } break;
+    case 'ArrowRight':
+      if(game&&!atEnd()){ e.preventDefault(); stop(false); showFrame(idx+1,true); } break;
+    case 'ArrowLeft':
+      if(game&&idx>0){ e.preventDefault(); stop(false); showFrame(idx-1,false); } break;
+    case 'r': case 'R':
+      if(!humanMode&&game){ e.preventDefault(); $('restartBtn').click(); } break;
+    case '1': setMode(false); break;
+    case '2': setMode(true); break;
+    case 'Escape':
+      if($('gover').classList.contains('show')){ $('goClose').click(); }
+      else $('backBtn').click();
+      break;
+  }
+});
 
 let startFrame=null;
 async function loadAgents(){
@@ -463,14 +731,56 @@ async function loadAgents(){
   pick($('blackSel'), d.agents.includes('Minimax d1')?'Minimax d1':'Random');
   pick($('oppSel'), d.agents.includes('MCTS v2')?'MCTS v2':d.agents[d.agents.length-1]);
   agentChars=d.characters||{};
-  renderOppCard();
+  renderVersus();
   if(d.start){ startFrame=d.start; renderPieces(d.start,false); updateEval(d.start); }
 }
-function renderOppCard(){
-  const c=agentChars[$('oppSel').value];
-  $('oppCard').innerHTML = c? `<b>${c.persona}</b> &middot; Elo ${c.elo}` : '';
+
+/* ───────── character sigils ─────────
+   Each persona gets its own 8x8 pixel mark, drawn inline as solid blocks so
+   the roster has a visual identity without shipping any image assets. */
+const SIGILS={
+  'The Rookie':      {blocks:'3,1 4,1 2,2 5,2 3,3 4,3 3,4 4,4 3,5 4,5 2,6 5,6 1,7 2,7 5,7 6,7'},
+  'The Calculator':  {blocks:'1,1 2,1 3,1 4,1 5,1 6,1 1,2 6,2 1,3 2,3 3,3 4,3 5,3 6,3 1,4 2,4 5,4 6,4 1,5 3,5 4,5 6,5 1,6 2,6 5,6 6,6 1,7 2,7 3,7 4,7 5,7 6,7'},
+  'The Student':     {blocks:'1,1 2,1 5,1 6,1 1,2 3,2 4,2 6,2 1,3 3,3 4,3 6,3 1,4 3,4 4,4 6,4 1,5 3,5 4,5 6,5 1,6 3,6 4,6 6,6 1,7 2,7 3,7 4,7 5,7 6,7'},
+  'The Gambler':     {blocks:'3,0 4,0 2,1 5,1 1,2 6,2 0,3 7,3 0,4 7,4 1,5 6,5 2,6 5,6 3,7 4,7 3,3 4,4'},
+  'The Strategist':  {blocks:'3,0 4,0 3,1 4,1 0,3 1,3 6,3 7,3 0,4 1,4 6,4 7,4 3,7 4,7 3,6 4,6 2,2 5,2 2,5 5,5 3,3 4,3 3,4 4,4'},
+  'The Apprentice':  {blocks:'3,0 4,0 2,1 3,1 4,1 5,1 0,2 1,2 6,2 7,2 0,3 7,3 0,4 7,4 0,5 1,5 6,5 7,5 2,6 3,6 4,6 5,6 3,7 4,7 3,3 4,3 3,4 4,4'},
+  'The Grandmaster': {blocks:'0,2 1,3 2,4 3,2 4,2 5,4 6,3 7,2 0,5 1,5 2,5 3,5 4,5 5,5 6,5 7,5 0,6 1,6 2,6 3,6 4,6 5,6 6,6 7,6'},
+};
+function sigilSvg(persona,color){
+  const spec=SIGILS[persona];
+  if(!spec) return '';
+  const rects=spec.blocks.split(' ').map(b=>{const [x,y]=b.split(',');
+    return `<rect x="${x}" y="${y}" width="1" height="1"/>`;}).join('');
+  return `<svg class="sigil" viewBox="0 0 8 8" fill="${color}" shape-rendering="crispEdges">${rects}</svg>`;
 }
-$('oppSel').addEventListener('change', renderOppCard);
+
+/* The versus card: who is on the board right now, on both sides. */
+function fighterHtml(agentName,isRedSide,isYou){
+  const c=agentChars[agentName]||{};
+  const colour=isRedSide?'#e23b2e':'#3b5bdb';
+  const persona=isYou?'You':(c.persona||agentName);
+  const sub=isYou?'human player':(c.persona?agentName:'');
+  return (isYou? `<svg class="sigil" viewBox="0 0 8 8" fill="${colour}" shape-rendering="crispEdges">
+      <rect x="3" y="1" width="2" height="2"/><rect x="2" y="3" width="4" height="1"/>
+      <rect x="1" y="4" width="6" height="1"/><rect x="2" y="5" width="4" height="3"/></svg>`
+     : sigilSvg(c.persona,colour))
+    + `<div class="who">${isRedSide?'RED':'BLACK'}</div>`
+    + `<div class="persona">${persona}</div>`
+    + (sub?`<div class="model">${sub}</div>`:'')
+    + (!isYou && c.elo?`<div class="elo">ELO ${c.elo}</div>`:'');
+}
+function renderVersus(){
+  let redName,blackName,redIsYou=false,blackIsYou=false;
+  if(humanMode){
+    const opp=$('oppSel').value;
+    if(humanSide==='red'){ redIsYou=true; blackName=opp; } else { blackIsYou=true; redName=opp; }
+  } else { redName=$('redSel').value; blackName=$('blackSel').value; }
+  $('fighterRed').innerHTML=fighterHtml(redName,true,redIsYou);
+  $('fighterBlack').innerHTML=fighterHtml(blackName,false,blackIsYou);
+}
+['oppSel','redSel','blackSel'].forEach(id=>$(id).addEventListener('change',renderVersus));
+$('sideSel').addEventListener('change',()=>{ humanSide=$('sideSel').value; renderVersus(); });
 
 /* ───────── mode toggle: Watch AI vs AI  /  Play vs AI ───────── */
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
@@ -483,7 +793,11 @@ function setMode(human){
   $('watchControls').style.display=human?'none':'block';
   $('humanControls').style.display=human?'block':'none';
   $('restartBtn').disabled=true; $('status').textContent='';
-  game=null; idx=0;
+  game=null; idx=0; lastDurationS=null;
+  resetGameOver(); clearBoard();
+  $('graphPanel').classList.add('empty');
+  humanSide=$('sideSel').value;
+  renderVersus();
   $('plyLine').textContent=human?'Pick a side and an opponent, then press Start.':'Pick two models and press Play.';
   if(startFrame){ renderPieces(startFrame,false); updateEval(startFrame); }
   resizeCanvas(); drawCurve(0);
@@ -494,6 +808,7 @@ $('modePlayBtn').addEventListener('click',()=>setMode(true));
 $('humanStartBtn').addEventListener('click', async()=>{
   audio(); $('humanStartBtn').disabled=true; clearSel();
   humanSide=$('sideSel').value; const aiAgent=$('oppSel').value;
+  renderVersus();
   $('status').textContent='Starting…';
   try{
     const res=await fetch('/api/move',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -502,6 +817,8 @@ $('humanStartBtn').addEventListener('click', async()=>{
     if(d.error){ $('status').textContent='Error: '+d.error; return; }
     humanSessionId=d.sessionId;
     game={red:humanSide==='red'?'You':aiAgent, black:humanSide==='black'?'You':aiAgent, frames:[], plies:0};
+    lastDurationS=null; resetGameOver(); clearBoard();
+    $('graphPanel').classList.remove('empty');
     idx=-1;
     for(const f of d.frames){ game.frames.push(f); idx=game.frames.length-1; game.plies=idx; showFrame(idx,false); }
     humanTurn=!d.gameOver;
@@ -558,7 +875,9 @@ $('playBtn').addEventListener('click',async()=>{
     const d=await (await fetch('/api/play',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({red,black})})).json();
     if(d.error){ $('status').textContent='Error: '+d.error; return; }
     game=d; idx=0; $('srcTxt').textContent='eval: '+d.source;
-    $('status').textContent=`${d.plies} moves played in ${((Date.now()-t0)/1000).toFixed(1)}s.`;
+    lastDurationS=((Date.now()-t0)/1000).toFixed(1);
+    $('status').textContent=`${d.plies} moves played in ${lastDurationS}s.`;
+    $('graphPanel').classList.remove('empty'); resetGameOver(); clearBoard();
     $('restartBtn').disabled=false; showFrame(0,false); start();
   }catch(e){ $('status').textContent='Request failed: '+e; }
   finally{ showLoading(false); $('playBtn').disabled=false; }

@@ -33,7 +33,7 @@ sys.path.insert(0, _ROOT)
 from dashboard.components.advantage import evaluate_snapshots  # noqa: E402
 from dashboard.components.agents_ui import AGENT_NAMES, make_agent  # noqa: E402
 from dashboard.components.game_playback import record_game  # noqa: E402
-from src.environment import action_space  # noqa: E402
+from src.environment import action_space, rules  # noqa: E402
 from src.environment.board import Board  # noqa: E402
 from src.environment.move_generator import generate_legal_moves  # noqa: E402
 from src.utils.config import RED  # noqa: E402
@@ -48,8 +48,8 @@ _MCTS_SIMS = 48    # fewer sims = much faster, strength barely changes (ablation
 # Human-vs-AI sessions, keyed by a generated session id. Each entry holds the
 # live Board, the instantiated AI agent (kept alive across moves so an engine
 # subprocess or loaded network isn't recreated on every request), which colour
-# the human plays, and the piece count after the last move (for capture
-# detection, mirroring _serialize's use in play_game).
+# the human plays, and the PieceTracker carrying piece identity across the
+# session (so the browser can animate moves and captures).
 _SESSIONS: dict[str, dict] = {}
 _SESSIONS_LOCK = threading.Lock()
 
@@ -69,17 +69,83 @@ _CHARACTERS = {
 }
 
 
-def _serialize(board) -> list[dict]:
-    """A board → a flat list of pieces for the front-end to draw."""
+class PieceTracker:
+    """Stable identity for every piece on the board.
+
+    A board snapshot only says *what sits where*, never *which piece moved*.
+    Without identity the browser has to tear down and rebuild all 32 pieces on
+    every ply, which makes smooth movement and capture animation impossible.
+    This assigns each piece an id once at the start of a game and carries that
+    id along as moves are applied, so the front end can diff frame to frame.
+    """
+
+    __slots__ = ("ids",)
+
+    def __init__(self, board) -> None:
+        self.ids: dict[tuple[int, int], str] = {}
+        counters: dict[tuple[str, int], int] = {}
+        for color in (RED, -RED):
+            side = "r" if color == RED else "b"
+            for row, col, piece_type in board.pieces_of(color):
+                key = (side, piece_type)
+                n = counters.get(key, 0)
+                counters[key] = n + 1
+                self.ids[(row, col)] = f"{side}{piece_type}_{n}"
+
+    def apply(self, move) -> str | None:
+        """Carry the mover's id to its destination.
+
+        Returns the id of the captured piece, or ``None`` for a quiet move —
+        which is also how the front end knows a capture happened and which
+        element to animate out.
+        """
+        from_row, from_col, to_row, to_col = move
+        captured = self.ids.pop((to_row, to_col), None)
+        moved = self.ids.pop((from_row, from_col), None)
+        if moved is not None:
+            self.ids[(to_row, to_col)] = moved
+        return captured
+
+    def id_at(self, row: int, col: int) -> str:
+        # The fallback should never fire in normal play; it keeps a desynced
+        # tracker from crashing the demo mid-presentation.
+        return self.ids.get((row, col), f"x{row}_{col}")
+
+
+def _serialize(board, tracker: PieceTracker) -> list[dict]:
+    """A board → a flat list of pieces (with stable ids) for the front end."""
     pieces = []
     for color in (RED, -RED):
         for row, col, piece_type in board.pieces_of(color):
             pieces.append({
+                "id": tracker.id_at(row, col),
                 "r": row, "c": col,
                 "t": piece_label(piece_type, color),
                 "red": color == RED,
             })
     return pieces
+
+
+def _status(board) -> dict:
+    """Check / game-over state of ``board``, from the side to move's view.
+
+    The side to move losing when it has no legal reply covers BOTH checkmate
+    and stalemate, since stalemate is a loss in Xiangqi (docs/01-GAME-RULES.md
+    section 6.3) — the two are distinguished only for the wording shown to the
+    viewer. ``checkPos`` is where the threatened General stands, so the board
+    can point at it.
+    """
+    over = not generate_legal_moves(board)
+    in_check = rules.is_in_check(board, board.to_move)
+    status: dict = {"check": in_check and not over, "over": over}
+    if in_check or over:
+        position = board.find_general(board.to_move)
+        if position is not None:
+            status["checkPos"] = {"r": position[0], "c": position[1]}
+    if over:
+        status["result"] = "black" if board.to_move == RED else "red"
+        status["reason"] = "checkmate" if in_check else "stalemate"
+    return status
 
 
 def play_game(red: str, black: str) -> dict:
@@ -91,27 +157,15 @@ def play_game(red: str, black: str) -> dict:
     )
     evals = evaluate_snapshots(snapshots)
 
-    frames = []
-    prev_count = None
-    for k, board in enumerate(snapshots):
-        pieces = _serialize(board)
-        move = None
-        capture = False
-        if k > 0:
-            fr, fc, tr, tc = moves[k - 1]
-            move = {"fr": fr, "fc": fc, "tr": tr, "tc": tc}
-            capture = prev_count is not None and len(pieces) < prev_count
-        ev = evals[k]
-        frames.append({
-            "pieces": pieces,
-            "move": move,
-            "capture": capture,
-            "redCp": ev["red_cp"],
-            "fill": ev["fill"],
-            "label": ev["label"],
-            "mate": ev["is_mate"],
-        })
-        prev_count = len(pieces)
+    tracker = PieceTracker(snapshots[0])
+    frames = [
+        _frame_for(board, moves[k - 1] if k > 0 else None, tracker, evals[k])
+        for k, board in enumerate(snapshots)
+    ]
+    # record_game stops at the ply cap as well as at a terminal position, so a
+    # game that simply ran out of moves is a draw rather than a win.
+    if frames and not frames[-1]["over"] and len(moves) >= _MAX_PLIES:
+        frames[-1].update(over=True, result="draw", reason="move limit")
 
     return {
         "red": red,
@@ -131,27 +185,28 @@ class HumanMoveError(ValueError):
     """
 
 
-def _frame_for(board, move_tuple, prev_count, ev) -> tuple[dict, int]:
-    """Build one playback frame (see ``play_game``'s ``frames`` entries) for a
-    single board, given the move that produced it and the previous piece
-    count (for capture detection). Returns ``(frame, new_piece_count)``."""
-    pieces = _serialize(board)
-    move = None
-    capture = False
-    if move_tuple is not None:
-        fr, fc, tr, tc = move_tuple
-        move = {"fr": fr, "fc": fc, "tr": tr, "tc": tc}
-        capture = prev_count is not None and len(pieces) < prev_count
+def _frame_for(board, move_tuple, tracker: PieceTracker, ev) -> dict:
+    """Build one playback frame for a single board.
+
+    ``board`` is the position *after* ``move_tuple`` was played, so the tracker
+    is advanced by that move first — which is what yields ``capturedId``.
+    """
+    captured = tracker.apply(move_tuple) if move_tuple is not None else None
     frame = {
-        "pieces": pieces,
-        "move": move,
-        "capture": capture,
+        "pieces": _serialize(board, tracker),
+        "move": None,
+        "capture": captured is not None,
+        "capturedId": captured,
         "redCp": ev["red_cp"],
         "fill": ev["fill"],
         "label": ev["label"],
         "mate": ev["is_mate"],
     }
-    return frame, len(pieces)
+    if move_tuple is not None:
+        fr, fc, tr, tc = move_tuple
+        frame["move"] = {"fr": fr, "fc": fc, "tr": tr, "tc": tc}
+    frame.update(_status(board))
+    return frame
 
 
 def _play_ai_ply(session_id: str) -> tuple[dict | None, bool]:
@@ -164,11 +219,9 @@ def _play_ai_ply(session_id: str) -> tuple[dict | None, bool]:
     mask = action_space.legal_mask(board)
     move = action_space.index_to_move(sess["agent"].select_move(board, mask))
     board.apply_move(*move)
-    game_over = not generate_legal_moves(board)
     ev = evaluate_snapshots([board])[0]
-    frame, prev_count = _frame_for(board, move, sess["prev_count"], ev)
-    sess["prev_count"] = prev_count
-    return frame, game_over
+    frame = _frame_for(board, move, sess["tracker"], ev)
+    return frame, frame["over"]
 
 
 def start_human_game(human_side: str, ai_agent_name: str) -> dict:
@@ -184,10 +237,10 @@ def start_human_game(human_side: str, ai_agent_name: str) -> dict:
     agent = make_agent(ai_agent_name, mcts_sims=_MCTS_SIMS)
 
     board = Board()
+    tracker = PieceTracker(board)
     session_id = uuid.uuid4().hex
     ev0 = evaluate_snapshots([board])[0]
-    frame, prev_count = _frame_for(board, None, None, ev0)
-    frames = [frame]
+    frames = [_frame_for(board, None, tracker, ev0)]
 
     with _SESSIONS_LOCK:
         _SESSIONS[session_id] = {
@@ -196,7 +249,7 @@ def start_human_game(human_side: str, ai_agent_name: str) -> dict:
             "agent_name": ai_agent_name,
             "human_color": human_color,
             "ai_color": ai_color,
-            "prev_count": prev_count,
+            "tracker": tracker,
         }
 
     game_over = False
@@ -234,10 +287,9 @@ def human_move(session_id: str, fr: int, fc: int, tr: int, tc: int) -> dict:
         raise HumanMoveError("illegal move")
 
     board.apply_move(fr, fc, tr, tc)
-    game_over = not generate_legal_moves(board)
     ev = evaluate_snapshots([board])[0]
-    frame, prev_count = _frame_for(board, (fr, fc, tr, tc), sess["prev_count"], ev)
-    sess["prev_count"] = prev_count
+    frame = _frame_for(board, (fr, fc, tr, tc), sess["tracker"], ev)
+    game_over = frame["over"]
     frames = [frame]
 
     if not game_over:
@@ -272,10 +324,11 @@ class Handler(BaseHTTPRequestHandler):
             except OSError:
                 self._send(404, b"index.html not found", "text/plain")
         elif self.path == "/api/agents":
-            start = {
-                "pieces": _serialize(Board()), "move": None, "capture": False,
-                "redCp": 0, "fill": 0.5, "label": "Starting position", "mate": False,
-            }
+            board = Board()
+            start = _frame_for(board, None, PieceTracker(board), {
+                "red_cp": 0, "fill": 0.5,
+                "label": "Starting position", "is_mate": False,
+            })
             characters = {name: _CHARACTERS[name] for name in AGENT_NAMES if name in _CHARACTERS}
             self._json({"agents": AGENT_NAMES, "characters": characters, "start": start})
         elif self.path == "/favicon.ico":
